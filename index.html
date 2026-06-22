@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ValueBot — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #05080f;
+    --bg2: #080d1a;
+    --bg3: #0c1225;
+    --border: rgba(255,255,255,0.06);
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --purple: #8b5cf6;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --dim: #1e293b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* AMBIENT BG */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(59,130,246,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(16,185,129,0.06) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky; top:0; z-index:100;
+    background: rgba(5,8,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-icon {
+    width:36px; height:36px; border-radius:10px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; box-shadow: 0 0 20px rgba(59,130,246,0.4);
+  }
+  .logo-text { font-weight:700; font-size:16px; color:#fff; letter-spacing:-0.02em; }
+  .logo-sub { font-size:10px; color:var(--cyan); letter-spacing:0.12em; text-transform:uppercase; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .live-pill {
+    display:flex; align-items:center; gap:5px;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius:20px; padding:4px 10px;
+    font-size:11px; color:var(--green); font-weight:500;
+  }
+  .live-dot {
+    width:6px; height:6px; border-radius:50%; background:var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{opacity:1; transform:scale(1);}
+    50%{opacity:0.5; transform:scale(1.3);}
+  }
+  #last-update { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+
+  /* NAV */
+  .nav {
+    display:flex; gap:2px; padding:12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2); overflow-x:auto;
+  }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav-btn {
+    white-space:nowrap;
+    padding:7px 16px; border-radius:8px; border:none;
+    background:transparent; color:var(--muted);
+    font-size:12px; font-weight:500; cursor:pointer;
+    font-family:'Inter',sans-serif; letter-spacing:0.02em;
+    transition: all 0.2s;
+  }
+  .nav-btn.active {
+    background: rgba(59,130,246,0.15);
+    color: #93c5fd;
+    box-shadow: inset 0 0 0 1px rgba(59,130,246,0.3);
+  }
+  .nav-btn:hover:not(.active) { color:var(--text); background:rgba(255,255,255,0.04); }
+
+  /* BODY */
+  .body { padding:20px; position:relative; z-index:1; }
+  .tab { display:none; }
+  .tab.active { display:block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  /* STAT GRID */
+  .stat-grid {
+    display:grid; gap:12px;
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom:20px;
+  }
+  @media(min-width:600px){ .stat-grid { grid-template-columns: repeat(3,1fr); } }
+  @media(min-width:900px){ .stat-grid { grid-template-columns: repeat(6,1fr); } }
+
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius:14px; padding:16px;
+    position:relative; overflow:hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,0.3); }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background: var(--accent, linear-gradient(90deg, var(--blue), var(--cyan)));
+  }
+  .stat-label { font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; }
+  .stat-value { font-size:28px; font-weight:800; line-height:1; letter-spacing:-0.03em; }
+  .stat-sub { font-size:10px; color:var(--muted); margin-top:5px; }
+
+  /* CARD */
+  .card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius:14px; overflow:hidden; margin-bottom:16px;
+  }
+  .card-head {
+    padding:12px 16px;
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .card-title { font-size:12px; font-weight:600; color:var(--text); letter-spacing:0.05em; text-transform:uppercase; }
+  .card-count { font-size:11px; color:var(--muted); background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:6px; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th {
+    padding:10px 14px; text-align:left;
+    font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase;
+    border-bottom:1px solid var(--border); font-weight:500; white-space:nowrap;
+  }
+  td {
+    padding:11px 14px; border-bottom:1px solid rgba(255,255,255,0.03);
+    font-size:12px; color:#94a3b8; white-space:nowrap;
+  }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+
+  /* BADGES */
+  .badge {
+    display:inline-block; padding:2px 8px; border-radius:6px;
+    font-size:10px; font-weight:600; letter-spacing:0.05em;
+  }
+  .badge-green { background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.2); }
+  .badge-red { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.2); }
+  .badge-blue { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.2); }
+  .badge-amber { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.2); }
+  .badge-purple { background:rgba(139,92,246,0.15); color:#a78bfa; border:1px solid rgba(139,92,246,0.2); }
+
+  /* EMPTY */
+  .empty {
+    padding:48px 20px; text-align:center; color:var(--dim);
+    font-size:13px; display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  .empty-icon { font-size:36px; opacity:0.3; }
+
+  /* SPINNER */
+  .loader {
+    position:fixed; inset:0; z-index:999;
+    background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  }
+  .spinner {
+    width:44px; height:44px; border-radius:50%;
+    border:3px solid rgba(59,130,246,0.15);
+    border-top-color: var(--blue);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg);} }
+  .loader-text { font-size:12px; color:var(--muted); letter-spacing:0.1em; }
+
+  /* WIN RATE BAR */
+  .wr-bar-bg { background:rgba(255,255,255,0.06); border-radius:4px; height:6px; margin-top:6px; overflow:hidden; }
+  .wr-bar-fill { height:100%; border-radius:4px; transition:width 1s ease; background:linear-gradient(90deg, var(--blue), var(--green)); }
+
+  /* MONO */
+  .mono { font-family:'JetBrains Mono', monospace; }
+
+  /* PNL COLORS */
+  .pos { color: var(--green) !important; }
+  .neg { color: var(--red) !important; }
+  .neu { color: var(--text) !important; }
+
+  /* REFRESH BTN */
+  .refresh-btn {
+    background:rgba(255,255,255,0.05); border:1px solid var(--border);
+    color:var(--muted); padding:6px 12px; border-radius:8px; cursor:pointer;
+    font-size:11px; font-family:'Inter',sans-serif;
+    transition:all 0.2s; display:flex; align-items:center; gap:5px;
+  }
+  .refresh-btn:hover { background:rgba(255,255,255,0.08); color:var(--text); }
+  .refresh-btn.spinning svg { animation: spin 0.6s linear infinite; }
+
+  /* ERROR */
+  .error-box {
+    background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2);
+    border-radius:10px; padding:12px 16px; margin-bottom:16px;
+    font-size:12px; color:#f87171; display:flex; align-items:center; gap:8px;
+  }
+
+  /* PROGRESS RING for win rate */
+  .ring-wrap { position:relative; width:80px; height:80px; }
+  .ring-wrap svg { transform:rotate(-90deg); }
+  .ring-label {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    font-weight:800; font-size:16px; letter-spacing:-0.02em;
+  }
+  .ring-label span { font-size:9px; color:var(--muted); font-weight:400; }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="spinner"></div>
+  <div class="loader-text">CONNEXION SUPABASE…</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">ValueBot</div>
+      <div class="logo-sub">Paper Trading</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill"><div class="live-dot"></div> LIVE</div>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/>
+      </svg>
+      Actualiser
+    </button>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('overview',this)">Vue Générale</button>
+  <button class="nav-btn" onclick="showTab('signaux',this)">Signaux</button>
+  <button class="nav-btn" onclick="showTab('paris',this)">Paris</button>
+  <button class="nav-btn" onclick="showTab('performance',this)">Performance</button>
+</div>
+
+<div class="body">
+  <div id="error-box" class="error-box" style="display:none">
+    ⚠ <span id="error-msg"></span>
+  </div>
+  <div style="text-align:right;font-size:10px;color:var(--muted);margin-bottom:12px;font-family:'JetBrains Mono',monospace" id="last-update"></div>
+
+  <!-- OVERVIEW -->
+  <div class="tab active" id="tab-overview">
+    <div class="stat-grid" id="stats-grid">
+      <!-- injected by JS -->
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">🎯 Derniers Signaux</span>
+        <span class="card-count" id="sig-count">0</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Match</th><th>Sport</th><th>Marché</th><th>Cote</th><th>Valeur</th><th>Date</th>
+          </tr></thead>
+          <tbody id="sig-table-body"><tr><td colspan="6"><div class="empty"><div class="empty-icon">📡</div>En attente de signaux…</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNAUX -->
+  <div class="tab" id="tab-signaux">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📡 Tous les Signaux</span>
+        <span class="card-count" id="all-sig-count">0</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Match</th><th>Sport</th><th>Marché</th><th>Cote</th><th>Edge</th><th>Statut</th><th>Date</th>
+          </tr></thead>
+          <tbody id="all-sig-body"><tr><td colspan="7"><div class="empty"><div class="empty-icon">📡</div>Aucun signal</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARIS -->
+  <div class="tab" id="tab-paris">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">💰 Historique Paris</span>
+        <span class="card-count" id="bets-count">0</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Match</th><th>Cote</th><th>Mise</th><th>Gain potentiel</th><th>Résultat</th><th>Date</th>
+          </tr></thead>
+          <tbody id="bets-body"><tr><td colspan="6"><div class="empty"><div class="empty-icon">💰</div>Aucun pari enregistré</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div class="tab" id="tab-performance">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="card" style="margin:0">
+        <div style="padding:20px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">Win Rate</div>
+          <div id="wr-ring" style="display:flex;justify-content:center;margin-bottom:10px">
+            <div class="ring-wrap">
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="url(#grad)" stroke-width="6"
+                  stroke-dasharray="213.6" id="wr-circle" stroke-dashoffset="213.6" stroke-linecap="round"/>
+                <defs>
+                  <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#3b82f6"/>
+                    <stop offset="100%" stop-color="#10b981"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="ring-label" id="wr-label">—<span>win rate</span></div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">Objectif : 62–72%</div>
+          <div class="wr-bar-bg" style="margin-top:8px"><div class="wr-bar-fill" id="wr-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="card" style="margin:0">
+        <div style="padding:20px">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">P&amp;L Simulé</div>
+          <div id="pnl-big" style="font-size:32px;font-weight:800;letter-spacing:-0.03em;margin-bottom:4px">—</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:16px">paper trading uniquement</div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="perf-stats"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📊 Journal de Performance</span>
+      </div>
+      <div class="tbl-wrap" id="perf-table-wrap">
+        <div class="empty"><div class="empty-icon">📊</div>Disponible après les premiers résultats</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://hqmbmzhfylapvxlctgyi.supabase.co';
+const SB_KEY = 'sb_publishable_AMTUroIieacj6SwMw63YpA_JbcHfjh3';
+
+let allBets = [], allSigs = [], allPerf = [];
+
+async function sbFetch(table) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?order=created_at.desc&limit=100`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+  });
+  if (!r.ok) throw new Error(`${table} ${r.status}`);
+  return r.json();
+}
+
+function fmt(v, d=2) { return v==null?'—':Number(v).toFixed(d); }
+function dateStr(v) {
+  if(!v) return '—';
+  return new Date(v).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function matchName(r) {
+  if(r.match_name) return r.match_name;
+  if(r.home_team && r.away_team) return `${r.home_team} vs ${r.away_team}`;
+  return '—';
+}
+function sportBadge(s) {
+  if(!s) s='football';
+  const cls = s==='tennis'?'badge-purple':'badge-blue';
+  const icon = s==='tennis'?'🎾':'⚽';
+  return `<span class="badge ${cls}">${icon} ${s}</span>`;
+}
+function resultBadge(r) {
+  if(r===true||r==='win') return '<span class="badge badge-green">✓ WIN</span>';
+  if(r===false||r==='loss') return '<span class="badge badge-red">✗ LOSS</span>';
+  return '<span class="badge badge-amber">⏳ En cours</span>';
+}
+function statusBadge(s) {
+  if(!s||s==='pending') return '<span class="badge badge-amber">pending</span>';
+  if(s==='executed') return '<span class="badge badge-green">exécuté</span>';
+  return `<span class="badge badge-blue">${s}</span>`;
+}
+
+async function loadAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  document.getElementById('error-box').style.display='none';
+
+  try {
+    [allBets, allSigs, allPerf] = await Promise.all([
+      sbFetch('bets_history').catch(()=>[]),
+      sbFetch('signals').catch(()=>[]),
+      sbFetch('performance_log').catch(()=>[])
+    ]);
+    render();
+    document.getElementById('last-update').textContent =
+      'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR') + ' · Auto-refresh 60s';
+  } catch(e) {
+    document.getElementById('error-box').style.display='flex';
+    document.getElementById('error-msg').textContent = 'Erreur : ' + e.message;
+  } finally {
+    btn.classList.remove('spinning');
+    document.getElementById('loader').style.display='none';
+  }
+}
+
+function render() {
+  // STATS
+  const settled = allBets.filter(b=>b.result!=null);
+  const wins = settled.filter(b=>b.result===true||b.result==='win');
+  const losses = settled.filter(b=>b.result===false||b.result==='loss');
+  const wr = settled.length ? (wins.length/settled.length*100) : null;
+  const pnl = settled.reduce((a,b)=>{
+    const isWin = b.result===true||b.result==='win';
+    return a + (isWin ? (Number(b.potential_win||0)-Number(b.stake||0)) : -Number(b.stake||0));
+  }, 0);
+  const avgOdds = allBets.length ? allBets.reduce((a,b)=>a+Number(b.odds||0),0)/allBets.length : null;
+
+  // Stat cards
+  const statsData = [
+    { label:'Signaux', value: allSigs.length, color:'#3b82f6', sub:'détectés' },
+    { label:'Paris', value: allBets.length, color:'#e2e8f0', sub:`${settled.length} résolus` },
+    { label:'Win Rate', value: wr!=null?wr.toFixed(1)+'%':'—', color: wr==null?'#64748b':wr>=62?'#10b981':'#f59e0b', sub:'cible 62–72%' },
+    { label:'P&L Simulé', value: settled.length?(pnl>=0?'+':'')+pnl.toFixed(0)+'€':'—', color: pnl>0?'#10b981':pnl<0?'#ef4444':'#e2e8f0', sub:'paper trading' },
+    { label:'Cote Moy.', value: avgOdds?avgOdds.toFixed(2):'—', color:'#06b6d4', sub:'tous paris' },
+    { label:'W / L', value: `${wins.length} / ${losses.length}`, color:'#e2e8f0', sub:'wins / losses' },
+  ];
+  document.getElementById('stats-grid').innerHTML = statsData.map(s=>`
+    <div class="stat-card">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value mono" style="color:${s.color}">${s.value}</div>
+      <div class="stat-sub">${s.sub}</div>
+    </div>
+  `).join('');
+
+  // Sig count
+  document.getElementById('sig-count').textContent = allSigs.length;
+  document.getElementById('all-sig-count').textContent = allSigs.length;
+  document.getElementById('bets-count').textContent = allBets.length;
+
+  // Overview signal table (last 8)
+  const sigRows = allSigs.slice(0,8);
+  document.getElementById('sig-table-body').innerHTML = sigRows.length ? sigRows.map(s=>`
+    <tr>
+      <td style="color:#e2e8f0;max-width:160px;overflow:hidden;text-overflow:ellipsis">${matchName(s)}</td>
+      <td>${sportBadge(s.sport)}</td>
+      <td>${s.market||s.bet_type||'—'}</td>
+      <td class="mono" style="color:#06b6d4">${s.odds?fmt(s.odds):'—'}</td>
+      <td>${s.value_edge!=null?`<span style="color:#10b981">+${fmt(s.value_edge,1)}%</span>`:'—'}</td>
+      <td style="color:#475569">${dateStr(s.created_at)}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📡</div>Aucun signal pour l'instant</div></td></tr>`;
+
+  // All signals tab
+  document.getElementById('all-sig-body').innerHTML = allSigs.length ? allSigs.map(s=>`
+    <tr>
+      <td style="color:#e2e8f0">${matchName(s)}</td>
+      <td>${sportBadge(s.sport)}</td>
+      <td>${s.market||s.bet_type||'—'}</td>
+      <td class="mono" style="color:#06b6d4">${s.odds?fmt(s.odds):'—'}</td>
+      <td>${s.value_edge!=null?`<span style="color:#10b981">+${fmt(s.value_edge,1)}%</span>`:'—'}</td>
+      <td>${statusBadge(s.status)}</td>
+      <td style="color:#475569">${dateStr(s.created_at)}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📡</div>Aucun signal</div></td></tr>`;
+
+  // Bets tab
+  document.getElementById('bets-body').innerHTML = allBets.length ? allBets.map(b=>`
+    <tr>
+      <td style="color:#e2e8f0">${matchName(b)}</td>
+      <td class="mono" style="color:#06b6d4">${b.odds?fmt(b.odds):'—'}</td>
+      <td class="mono">${b.stake?fmt(b.stake,0)+'€':'—'}</td>
+      <td class="mono" style="color:#10b981">${b.potential_win?fmt(b.potential_win,0)+'€':'—'}</td>
+      <td>${resultBadge(b.result)}</td>
+      <td style="color:#475569">${dateStr(b.created_at)}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="6"><div class="empty"><div class="empty-icon">💰</div>Aucun pari enregistré</div></td></tr>`;
+
+  // Performance tab
+  if(wr!=null) {
+    const circ = 213.6;
+    const offset = circ - (wr/100)*circ;
+    document.getElementById('wr-circle').style.strokeDashoffset = offset;
+    document.getElementById('wr-label').innerHTML = `<b>${wr.toFixed(0)}%</b><span>win rate</span>`;
+    document.getElementById('wr-bar').style.width = Math.min(wr,100)+'%';
+  }
+  document.getElementById('pnl-big').innerHTML = settled.length
+    ? `<span class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(0)}€</span>` : '—';
+  document.getElementById('perf-stats').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:12px">
+      <span style="color:var(--muted)">Paris résolus</span><span>${settled.length}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px">
+      <span style="color:var(--muted)">Victoires</span><span style="color:#10b981">${wins.length}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px">
+      <span style="color:var(--muted)">Défaites</span><span style="color:#ef4444">${losses.length}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px">
+      <span style="color:var(--muted)">Cote moyenne</span><span>${avgOdds?avgOdds.toFixed(2):'—'}</span>
+    </div>
+  `;
+
+  // Perf log table
+  if(allPerf.length) {
+    const keys = Object.keys(allPerf[0]);
+    document.getElementById('perf-table-wrap').innerHTML = `<table>
+      <thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead>
+      <tbody>${allPerf.map(row=>`<tr>${keys.map(k=>`<td>${row[k]==null?'—':row[k]}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+  }
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Init
+loadAll();
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>
