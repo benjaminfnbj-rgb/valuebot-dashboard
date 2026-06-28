@@ -159,17 +159,25 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let bets=[],sigs=[],perf=[];
 
 async function sbFetch(table,limit=100){
-  const r=await fetch(`${SB_URL}/rest/v1/${table}?order=created_at.desc&limit=${limit}`,
+  // Essayer order par timestamp, fallback sans order si erreur
+  let url=`${SB_URL}/rest/v1/${table}?limit=${limit}`;
+  let r=await fetch(`${SB_URL}/rest/v1/${table}?order=timestamp.desc&limit=${limit}`,
     {headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
+  if(!r.ok){
+    // Fallback: sans tri (au cas où la colonne timestamp n'existe pas)
+    r=await fetch(url,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
+  }
   if(!r.ok)throw new Error(`${table}: ${r.status}`);
   return r.json();
 }
 function fmt(v,d=2){return v==null?'—':Number(v).toFixed(d);}
 function fdate(v){if(!v)return'—';return new Date(v).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
-function mn(r){return r.match_name||(r.home_team?`${r.home_team} vs ${r.away_team}`:'—');}
+function mn(r){return r.match||r.match_name||(r.home_team?`${r.home_team} vs ${r.away_team}`:(r.home?`${r.home} vs ${r.away}`:'—'));}
+function dt(r){return r.timestamp||r.created_at||null;}
+function edgeOf(r){return r.edge_pct!=null?r.edge_pct:(r.value_edge!=null?r.value_edge:null);}
 function sport(s){const c=s==='tennis'?'bp':'bb';return`<span class="badge ${c}">${s==='tennis'?'🎾':'⚽'} ${s||'foot'}</span>`;}
-function result(r){if(r===true||r==='win')return'<span class="badge bg">✓ WIN</span>';if(r===false||r==='loss')return'<span class="badge br">✗ LOSS</span>';return'<span class="badge ba">⏳</span>';}
-function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':'🥉';return`<span class="${cls}">${icon}${t}</span>`;}
+function result(r){if(r===true||r==='win'||r==='WIN')return'<span class="badge bg">✓ WIN</span>';if(r===false||r==='loss'||r==='LOSS')return'<span class="badge br">✗ LOSS</span>';return'<span class="badge ba">⏳</span>';}
+function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':t==='B'?'🥉':'👁️';return`<span class="${cls}">${icon}${t}</span>`;}
 
 async function loadAll(){
   document.getElementById('err').style.display='none';
@@ -198,7 +206,7 @@ function render(){
 
   // STATS GRID
   const stats=[
-    {l:'Signaux Pré-Match',v:pmSigs.length,c:'#f59e0b',s:'aujourd'hui'},
+    {l:'Signaux Pré-Match',v:pmSigs.length,c:'#f59e0b',s:'aujourd hui'},
     {l:'Signaux Live',v:liveSigs.length,c:'#06b6d4',s:'détectés'},
     {l:'Win Rate',v:wr?wr+'%':'—',c:wr>=62?'#10b981':'#f59e0b',s:'cible 62-72%'},
     {l:'P&L Simulé',v:settled.length?(pnl>=0?'+':'')+pnl.toFixed(0)+'€':'—',c:pnl>=0?'#10b981':'#ef4444',s:'paper trading'},
@@ -224,7 +232,7 @@ function render(){
           <span class="match-name">${mn(s)}</span>
           ${tier(s.tier)}
         </div>
-        <div class="match-league">🏆 ${s.league||'—'} · ${s.time_cmr||fdate(s.created_at)}</div>
+        <div class="match-league">🏆 ${s.league||'—'} · ${s.time_cmr||fdate(dt(s))}</div>
         <div class="recommendation">
           <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}</div>
           <div class="rec-details">Edge: +${fmt(s.value_edge||s.edge_pct,1)}% · Mise: ${fmt(s.stake_pct,1)}% bankroll</div>
@@ -240,7 +248,7 @@ function render(){
       <td>${sport(s.sport)}</td><td>${s.market||s.bet_type||'—'}</td>
       <td style="color:#06b6d4;font-family:'JetBrains Mono',monospace">${s.odds?fmt(s.odds):'—'}</td>
       <td>${s.value_edge!=null?`<span style="color:#10b981">+${fmt(s.value_edge,1)}%</span>`:'—'}</td>
-      <td style="color:#475569">${fdate(s.created_at)}</td>
+      <td style="color:#475569">${fdate(dt(s))}</td>
     </tr>`)
     .join(''):`<tr><td colspan="6"><div class="empty">Aucun signal live</div></td></tr>`;
 
@@ -256,7 +264,7 @@ function render(){
           <span class="match-name">${mn(s)}</span>
           ${tier(s.tier)}
         </div>
-        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(s.created_at)} CMR</div>
+        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(dt(s))} CMR</div>
         ${s.market?`<div class="recommendation">
           <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}</div>
           <div class="rec-details">Proba modèle: ${fmt(s.p_model,1)}% · Edge: +${fmt(s.edge_pct||s.value_edge,1)}% · Mise: ${fmt(s.stake_pct,1)}%</div>
@@ -279,7 +287,7 @@ function render(){
       <td style="color:#06b6d4;font-family:'JetBrains Mono',monospace">${s.odds?fmt(s.odds):'—'}</td>
       <td>${s.value_edge!=null?`<span style="color:#10b981">+${fmt(s.value_edge,1)}%</span>`:'—'}</td>
       <td>${tier(s.tier)}</td>
-      <td style="color:#475569">${fdate(s.created_at)}</td>
+      <td style="color:#475569">${fdate(dt(s))}</td>
     </tr>`).join(''):`<tr><td colspan="7"><div class="empty">Aucun signal</div></td></tr>`;
 
   // PARIS TAB
@@ -291,7 +299,7 @@ function render(){
       <td style="font-family:'JetBrains Mono',monospace">${b.stake?fmt(b.stake,0)+'€':'—'}</td>
       <td style="color:#10b981;font-family:'JetBrains Mono',monospace">${b.potential_win?fmt(b.potential_win,0)+'€':'—'}</td>
       <td>${result(b.result)}</td>
-      <td style="color:#475569">${fdate(b.created_at)}</td>
+      <td style="color:#475569">${fdate(dt(b))}</td>
     </tr>`).join(''):`<tr><td colspan="6"><div class="empty">Aucun pari</div></td></tr>`;
 
   // PERF TAB
