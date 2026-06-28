@@ -1,154 +1,250 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0e17"/>
 <title>ValueBot</title>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
 <link rel="apple-touch-icon" href="/icon-192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#080c14;--bg2:#0d1220;--bg3:#0c1225;--border:rgba(255,255,255,0.06);--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--text:#e2e8f0;--muted:#64748b;--dark:#1e293b;--card:#162040;--white:#fff;}
+:root{
+  --bg:#0a0e17; --bg2:#0f1524; --surface:#111a2e; --surface2:#0d1424;
+  --border:rgba(148,163,184,0.10); --border2:rgba(148,163,184,0.16);
+  --text:#eef2f9; --text2:#8b9ab3; --text3:#5b6e80;
+  --accent:#3b82f6; --accent2:#22d3ee; --pos:#10b981; --neg:#f43f5e;
+  --warn:#f59e0b; --purple:#a78bfa;
+  --tier-s:#f59e0b; --tier-a:#10b981; --tier-b:#3b82f6;
+  --glow:rgba(59,130,246,0.12); --glow2:rgba(16,185,129,0.08);
+  --shadow:0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px -12px rgba(0,0,0,0.6);
+  --grad:linear-gradient(135deg,#3b82f6,#22d3ee);
+}
+[data-theme="light"]{
+  --bg:#eef1f7; --bg2:#e6eaf3; --surface:#ffffff; --surface2:#f6f8fc;
+  --border:rgba(15,23,42,0.08); --border2:rgba(15,23,42,0.14);
+  --text:#0f172a; --text2:#56627a; --text3:#94a3b8;
+  --accent:#2563eb; --accent2:#0891b2; --pos:#059669; --neg:#e11d48;
+  --warn:#d97706; --purple:#7c3aed;
+  --tier-s:#d97706; --tier-a:#059669; --tier-b:#2563eb;
+  --glow:rgba(37,99,235,0.10); --glow2:rgba(5,150,105,0.07);
+  --shadow:0 1px 2px rgba(15,23,42,0.04), 0 10px 30px -16px rgba(15,23,42,0.25);
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(59,130,246,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(16,185,129,0.06) 0%,transparent 60%);pointer-events:none;}
-.header{position:sticky;top:0;z-index:100;background:rgba(5,8,15,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;height:58px;display:flex;align-items:center;justify-content:space-between;}
-.logo{display:flex;align-items:center;gap:10px;}
-.logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:17px;}
-.logo-text{font-weight:700;font-size:15px;color:#fff;}
-.logo-sub{font-size:9px;color:var(--cyan);letter-spacing:0.12em;text-transform:uppercase;}
-.live-pill{display:flex;align-items:center;gap:5px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--green);font-weight:500;}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-.refresh-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-family:'Inter',sans-serif;}
-.nav{display:flex;gap:3px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;min-height:100vh;
+  transition:background .35s ease,color .35s ease;
+  -webkit-font-smoothing:antialiased;letter-spacing:-0.01em;
+}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 45% at 12% -8%,var(--glow) 0%,transparent 62%),
+             radial-gradient(ellipse 55% 38% at 88% 102%,var(--glow2) 0%,transparent 60%);}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);padding:0 14px;min-height:60px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:env(safe-area-inset-top);}
+.logo{display:flex;align-items:center;gap:11px;min-width:0;}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+  box-shadow:0 4px 14px -4px var(--accent);}
+.logo-text{font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:var(--text);letter-spacing:-0.02em;line-height:1;}
+.logo-sub{font-size:9px;color:var(--accent2);letter-spacing:0.16em;text-transform:uppercase;font-weight:600;margin-top:3px;}
+.h-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.icon-btn{width:34px;height:34px;border-radius:9px;background:var(--surface);border:1px solid var(--border2);
+  color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;
+  transition:all .2s ease;font-family:inherit;}
+.icon-btn:hover{color:var(--text);border-color:var(--accent);}
+.icon-btn:active{transform:scale(0.92);}
+.lang-btn{width:auto;padding:0 10px;font-size:12px;font-weight:700;font-family:'Sora',sans-serif;letter-spacing:0.04em;}
+.live-pill{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--pos) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--pos) 28%,transparent);border-radius:20px;padding:5px 11px;
+  font-size:11px;color:var(--pos);font-weight:600;letter-spacing:0.04em;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--pos);animation:pulse 2s infinite;box-shadow:0 0 8px var(--pos);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+/* NAV */
+.nav{display:flex;gap:4px;padding:11px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg2);overflow-x:auto;scrollbar-width:none;}
 .nav::-webkit-scrollbar{display:none;}
-.nav-btn{white-space:nowrap;padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
-.nav-btn.active{background:rgba(59,130,246,0.15);color:#93c5fd;box-shadow:inset 0 0 0 1px rgba(59,130,246,0.3);}
-.body{padding:16px;position:relative;z-index:1;}
+.nav-btn{white-space:nowrap;padding:7px 15px;border-radius:9px;border:1px solid transparent;
+  background:transparent;color:var(--text2);font-size:12.5px;font-weight:600;cursor:pointer;
+  font-family:'Sora',sans-serif;letter-spacing:-0.01em;transition:all .2s ease;}
+.nav-btn:hover{color:var(--text);}
+.nav-btn.active{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);
+  border-color:color-mix(in srgb,var(--accent) 30%,transparent);}
+
+/* BODY */
+.body{padding:16px 14px 40px;position:relative;z-index:1;max-width:980px;margin:0 auto;}
 .tab{display:none;}
-.tab.active{display:block;animation:fadeIn 0.2s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
-.stat-grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr);margin-bottom:16px;}
-@media(min-width:600px){.stat-grid{grid-template-columns:repeat(3,1fr);}}
-.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden;}
-.stat-label{font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
-.stat-value{font-size:24px;font-weight:800;line-height:1;font-family:'JetBrains Mono',monospace;}
-.stat-sub{font-size:9px;color:var(--muted);margin-top:4px;}
-.card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
-.card-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-.card-title{font-size:11px;font-weight:600;color:var(--text);letter-spacing:0.05em;text-transform:uppercase;}
-.card-count{font-size:10px;color:var(--muted);background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:5px;}
-.tbl-wrap{overflow-x:auto;}
+.tab.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.update-time{text-align:right;font-size:10px;color:var(--text3);margin-bottom:12px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;}
+
+/* STAT GRID */
+.stat-grid{display:grid;gap:11px;grid-template-columns:repeat(2,1fr);margin-bottom:16px;}
+@media(min-width:620px){.stat-grid{grid-template-columns:repeat(3,1fr);}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:15px 15px 14px;
+  position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bar,var(--accent));opacity:0.85;}
+.stat-label{font-size:9.5px;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;
+  margin-bottom:9px;font-weight:600;}
+.stat-value{font-size:26px;font-weight:700;line-height:1;font-family:'JetBrains Mono',monospace;letter-spacing:-0.02em;}
+.stat-sub{font-size:9.5px;color:var(--text3);margin-top:6px;font-weight:500;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow);}
+.card-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;
+  justify-content:space-between;align-items:center;gap:10px;}
+.card-title{font-family:'Sora',sans-serif;font-size:12px;font-weight:700;color:var(--text);
+  letter-spacing:0.02em;display:flex;align-items:center;gap:7px;}
+.card-count{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);
+  padding:3px 9px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-weight:600;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;scrollbar-width:thin;}
 table{width:100%;border-collapse:collapse;}
-th{padding:8px 12px;text-align:left;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap;}
-td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;color:#94a3b8;white-space:nowrap;}
+th{padding:10px 13px;text-align:left;font-size:9.5px;color:var(--text2);letter-spacing:0.1em;
+  text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap;}
+td{padding:11px 13px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);white-space:nowrap;}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(255,255,255,0.02);}
-.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;letter-spacing:0.05em;}
-.bg{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);}
-.br{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
-.bb{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);}
-.ba{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.2);}
-.bp{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.2);}
-.empty{padding:40px 20px;text-align:center;color:#2a3a52;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
-.match-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
-.match-card.value-bet{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.05);}
-.match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.match-name{font-size:13px;font-weight:600;color:#e2e8f0;}
-.match-time{font-size:10px;color:var(--muted);}
-.match-league{font-size:10px;color:var(--cyan);margin-bottom:8px;}
-.match-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;}
-.stat-pill{background:rgba(255,255,255,0.04);border-radius:6px;padding:5px 8px;font-size:10px;color:var(--muted);}
-.stat-pill span{color:#e2e8f0;font-weight:600;}
-.recommendation{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:7px;padding:8px 12px;margin-top:8px;font-size:11px;}
-.rec-market{color:#93c5fd;font-weight:600;}
-.rec-details{color:var(--muted);margin-top:3px;}
-.update-time{text-align:right;font-size:9px;color:#2a3a52;margin-bottom:10px;font-family:'JetBrains Mono',monospace;}
-.loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-.spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(59,130,246,0.15);border-top-color:var(--blue);animation:spin 0.8s linear infinite;}
+tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+.mono{font-family:'JetBrains Mono',monospace;font-weight:600;}
+.tnum{color:var(--accent2);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:7px;
+  font-size:9.5px;font-weight:700;letter-spacing:0.03em;font-family:'Sora',sans-serif;}
+.bg{background:color-mix(in srgb,var(--pos) 15%,transparent);color:var(--pos);}
+.br{background:color-mix(in srgb,var(--neg) 15%,transparent);color:var(--neg);}
+.bb{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);}
+.ba{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);}
+.bp{background:color-mix(in srgb,var(--purple) 15%,transparent);color:var(--purple);}
+.pos{color:var(--pos);}.neg{color:var(--neg);}
+
+/* MATCH CARDS */
+.match-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:15px;margin-bottom:11px;transition:border-color .2s ease;}
+.match-card.value-bet{border-color:color-mix(in srgb,var(--pos) 38%,transparent);
+  background:color-mix(in srgb,var(--pos) 5%,var(--surface2));}
+.match-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:7px;}
+.match-name{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.01em;}
+.match-league{font-size:10.5px;color:var(--accent2);margin-bottom:10px;font-weight:600;letter-spacing:0.02em;}
+.match-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px;}
+.stat-pill{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:7px 9px;font-size:10.5px;color:var(--text2);}
+.stat-pill span{color:var(--text);font-weight:700;font-family:'JetBrains Mono',monospace;}
+.recommendation{background:color-mix(in srgb,var(--accent) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:9px;padding:10px 12px;margin-top:10px;}
+.rec-market{color:var(--accent);font-weight:700;font-size:12.5px;font-family:'Sora',sans-serif;}
+.rec-details{color:var(--text2);margin-top:5px;font-size:11px;}
+
+/* EMPTY */
+.empty{padding:44px 20px;text-align:center;color:var(--text3);font-size:12.5px;
+  display:flex;flex-direction:column;align-items:center;gap:11px;line-height:1.5;}
+.empty .em-ico{font-size:34px;opacity:0.65;}
+.empty small{color:var(--text3);font-size:10.5px;}
+
+/* PERF LOG */
+.perf-row{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);}
+.perf-row b{color:var(--text3);font-weight:600;}
+
+/* LOADER */
+.loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;transition:opacity .3s ease;}
+.spinner{width:42px;height:42px;border-radius:50%;border:3px solid color-mix(in srgb,var(--accent) 18%,transparent);
+  border-top-color:var(--accent);animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.tier-s{color:#f59e0b;}
-.tier-a{color:#10b981;}
-.tier-b{color:#3b82f6;}
+.tier-s{color:var(--tier-s);font-weight:700;}.tier-a{color:var(--tier-a);font-weight:700;}.tier-b{color:var(--tier-b);font-weight:700;}
+.err-box{display:none;background:color-mix(in srgb,var(--neg) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--neg) 24%,transparent);border-radius:10px;
+  padding:11px 14px;margin-bottom:13px;font-size:11.5px;color:var(--neg);}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
 </style>
 </head>
 <body>
 <div class="loader" id="loader">
   <div class="spinner"></div>
-  <div style="color:var(--cyan);font-size:12px;letter-spacing:0.1em;">CONNEXION SUPABASE...</div>
+  <div style="color:var(--accent2);font-size:12px;letter-spacing:0.12em;font-family:'Sora',sans-serif;font-weight:600;" id="loader-txt">CONNEXION…</div>
 </div>
+
 <div class="header">
   <div class="logo">
     <div class="logo-icon">⚡</div>
     <div>
       <div class="logo-text">ValueBot</div>
-      <div class="logo-sub">v2.0 · Pré-Match + Live</div>
+      <div class="logo-sub" data-i18n="tagline">Pré-Match + Live</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
+  <div class="h-actions">
+    <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Thème" aria-label="Thème">🌙</button>
+    <button class="icon-btn lang-btn" id="lang-btn" onclick="toggleLang()" title="Langue" aria-label="Langue">FR</button>
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
-    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+    <button class="icon-btn" onclick="loadAll()" title="Refresh" aria-label="Refresh">↻</button>
   </div>
 </div>
-<div class="nav">
-  <button class="nav-btn active" onclick="showTab('overview',this)">Vue Générale</button>
-  <button class="nav-btn" onclick="showTab('prematch',this)">Pré-Match</button>
-  <button class="nav-btn" onclick="showTab('signaux',this)">Signaux Live</button>
-  <button class="nav-btn" onclick="showTab('paris',this)">Paris</button>
-  <button class="nav-btn" onclick="showTab('perf',this)">Performance</button>
+
+<div class="nav" id="nav">
+  <button class="nav-btn active" data-tab="overview" data-i18n="nav_overview" onclick="showTab('overview',this)">Vue Générale</button>
+  <button class="nav-btn" data-tab="prematch" data-i18n="nav_prematch" onclick="showTab('prematch',this)">Pré-Match</button>
+  <button class="nav-btn" data-tab="signaux" data-i18n="nav_live" onclick="showTab('signaux',this)">Signaux Live</button>
+  <button class="nav-btn" data-tab="paris" data-i18n="nav_bets" onclick="showTab('paris',this)">Paris</button>
+  <button class="nav-btn" data-tab="perf" data-i18n="nav_perf" onclick="showTab('perf',this)">Performance</button>
 </div>
+
 <div class="body">
   <div class="update-time" id="upd"></div>
-  <div id="err" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:#f87171;"></div>
+  <div class="err-box" id="err"></div>
 
-  <!-- OVERVIEW -->
   <div class="tab active" id="tab-overview">
     <div class="stat-grid" id="stat-grid"></div>
     <div class="card">
-      <div class="card-head"><span class="card-title">🌅 Derniers Signaux Pré-Match</span><span class="card-count" id="pm-cnt">0</span></div>
+      <div class="card-head"><span class="card-title">🌅 <span data-i18n="card_pm_recent">Derniers Signaux Pré-Match</span></span><span class="card-count" id="pm-cnt">0</span></div>
       <div id="pm-overview"></div>
     </div>
     <div class="card">
-      <div class="card-head"><span class="card-title">🎯 Signaux Live</span><span class="card-count" id="sig-cnt">0</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>Match</th><th>Sport</th><th>Marché</th><th>Cote</th><th>Edge</th><th>Date</th></tr></thead>
+      <div class="card-head"><span class="card-title">🎯 <span data-i18n="card_live">Signaux Live</span></span><span class="card-count" id="sig-cnt">0</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th data-i18n="th_match">Match</th><th data-i18n="th_sport">Sport</th><th data-i18n="th_market">Marché</th><th data-i18n="th_odds">Cote</th><th>Edge</th><th data-i18n="th_date">Date</th></tr></thead>
       <tbody id="sig-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- PRÉ-MATCH -->
   <div class="tab" id="tab-prematch">
     <div class="card">
-      <div class="card-head"><span class="card-title">🌅 Analyses Pré-Match du Jour</span><span class="card-count" id="pm-full-cnt">0</span></div>
-      <div id="pm-full" style="padding:12px;"></div>
+      <div class="card-head"><span class="card-title">🌅 <span data-i18n="card_pm_today">Analyses Pré-Match du Jour</span></span><span class="card-count" id="pm-full-cnt">0</span></div>
+      <div id="pm-full" style="padding:13px;"></div>
     </div>
   </div>
 
-  <!-- SIGNAUX LIVE -->
   <div class="tab" id="tab-signaux">
     <div class="card">
-      <div class="card-head"><span class="card-title">📡 Tous les Signaux Live</span><span class="card-count" id="all-sig-cnt">0</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>Match</th><th>Sport</th><th>Marché</th><th>Cote</th><th>Edge</th><th>Tier</th><th>Date</th></tr></thead>
+      <div class="card-head"><span class="card-title">📡 <span data-i18n="card_all_live">Tous les Signaux Live</span></span><span class="card-count" id="all-sig-cnt">0</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th data-i18n="th_match">Match</th><th data-i18n="th_sport">Sport</th><th data-i18n="th_market">Marché</th><th data-i18n="th_odds">Cote</th><th>Edge</th><th data-i18n="th_tier">Tier</th><th data-i18n="th_date">Date</th></tr></thead>
       <tbody id="all-sig-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- PARIS -->
   <div class="tab" id="tab-paris">
     <div class="card">
-      <div class="card-head"><span class="card-title">💰 Historique Paris</span><span class="card-count" id="bets-cnt">0</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>Match</th><th>Cote</th><th>Mise</th><th>Gain pot.</th><th>Résultat</th><th>Date</th></tr></thead>
+      <div class="card-head"><span class="card-title">💰 <span data-i18n="card_bets">Historique Paris</span></span><span class="card-count" id="bets-cnt">0</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th data-i18n="th_match">Match</th><th data-i18n="th_odds">Cote</th><th data-i18n="th_stake">Mise</th><th data-i18n="th_potwin">Gain pot.</th><th data-i18n="th_result">Résultat</th><th data-i18n="th_date">Date</th></tr></thead>
       <tbody id="bets-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- PERFORMANCE -->
   <div class="tab" id="tab-perf">
     <div class="stat-grid" id="perf-grid"></div>
     <div class="card">
-      <div class="card-head"><span class="card-title">📊 Journal Performance</span></div>
-      <div id="perf-log" style="padding:14px;"></div>
+      <div class="card-head"><span class="card-title">📊 <span data-i18n="card_perf_log">Journal Performance</span></span></div>
+      <div id="perf-log" style="padding:6px 4px;"></div>
     </div>
   </div>
 </div>
@@ -156,28 +252,69 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 <script>
 const SB_URL='https://hqmbmzhfylapvxlctgyi.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxbWJtemhmeWxhcHZ4bGN0Z3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNzg5ODksImV4cCI6MjA5NzY1NDk4OX0.OufzzFo0pTJ_XKl24LRnCvREhMiLVRirJ2uXtUy5G4Y';
-let bets=[],sigs=[],perf=[];
 
+/* ---------- i18n ---------- */
+const I18N={
+ fr:{tagline:"Pré-Match + Live",nav_overview:"Vue Générale",nav_prematch:"Pré-Match",nav_live:"Signaux Live",nav_bets:"Paris",nav_perf:"Performance",
+   card_pm_recent:"Derniers Signaux Pré-Match",card_live:"Signaux Live",card_pm_today:"Analyses Pré-Match du Jour",card_all_live:"Tous les Signaux Live",card_bets:"Historique Paris",card_perf_log:"Journal Performance",
+   th_match:"Match",th_sport:"Sport",th_market:"Marché",th_odds:"Cote",th_date:"Date",th_tier:"Tier",th_stake:"Mise",th_potwin:"Gain pot.",th_result:"Résultat",
+   st_pm:"Signaux Pré-Match",st_live:"Signaux Live",st_wr:"Taux de Réussite",st_pnl:"P&L Simulé",st_bets:"Paris",st_wl:"V / D",
+   sub_today:"aujourd'hui",sub_detected:"détectés",sub_target:"cible 62-72%",sub_paper:"paper trading",sub_settled:"résolus",sub_wl:"victoires / défaites",
+   st_pnl_total:"P&L Total",st_settled:"Paris résolus",sub_goal:"objectif ≥62%",
+   updated:"Mis à jour",auto:"Auto 60s",
+   empty_pm_short:"Rapport chaque matin à 6h — Telegram",empty_pm_full:"Le rapport arrive chaque matin à 6h sur Telegram",empty_pm_sub:"Les analyses apparaîtront ici après réception",
+   empty_live:"Aucun signal live",empty_bets:"Aucun pari",empty_perf:"Disponible après les premiers résultats",
+   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…"},
+ en:{tagline:"Pre-Match + Live",nav_overview:"Overview",nav_prematch:"Pre-Match",nav_live:"Live Signals",nav_bets:"Bets",nav_perf:"Performance",
+   card_pm_recent:"Latest Pre-Match Signals",card_live:"Live Signals",card_pm_today:"Today's Pre-Match Analysis",card_all_live:"All Live Signals",card_bets:"Bet History",card_perf_log:"Performance Log",
+   th_match:"Match",th_sport:"Sport",th_market:"Market",th_odds:"Odds",th_date:"Date",th_tier:"Tier",th_stake:"Stake",th_potwin:"Pot. win",th_result:"Result",
+   st_pm:"Pre-Match Signals",st_live:"Live Signals",st_wr:"Win Rate",st_pnl:"Simulated P&L",st_bets:"Bets",st_wl:"W / L",
+   sub_today:"today",sub_detected:"detected",sub_target:"target 62-72%",sub_paper:"paper trading",sub_settled:"settled",sub_wl:"wins / losses",
+   st_pnl_total:"Total P&L",st_settled:"Settled bets",sub_goal:"goal ≥62%",
+   updated:"Updated",auto:"Auto 60s",
+   empty_pm_short:"Report every morning at 6am — Telegram",empty_pm_full:"The report arrives every morning at 6am on Telegram",empty_pm_sub:"Analyses will appear here once received",
+   empty_live:"No live signal",empty_bets:"No bets",empty_perf:"Available after the first results",
+   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…"}
+};
+let LANG=localStorage.getItem('vb_lang')||(navigator.language||'fr').slice(0,2);
+if(LANG!=='en'&&LANG!=='fr')LANG='fr';
+function t(k){return (I18N[LANG]&&I18N[LANG][k])||k;}
+function applyI18n(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.getAttribute('data-i18n'));});
+  document.getElementById('lang-btn').textContent=LANG.toUpperCase();
+  document.getElementById('loader-txt').textContent=t('connecting');
+}
+function toggleLang(){LANG=LANG==='fr'?'en':'fr';localStorage.setItem('vb_lang',LANG);applyI18n();render();stampUpdate();}
+
+/* ---------- theme ---------- */
+let THEME=localStorage.getItem('vb_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+function setTheme(th){THEME=th;document.documentElement.dataset.theme=th;localStorage.setItem('vb_theme',th);
+  document.getElementById('theme-btn').textContent=th==='dark'?'🌙':'☀️';
+  document.querySelector('meta[name=theme-color]').setAttribute('content',th==='dark'?'#0a0e17':'#eef1f7');}
+function toggleTheme(){setTheme(THEME==='dark'?'light':'dark');}
+
+/* ---------- data ---------- */
+let bets=[],sigs=[],perf=[];
 async function sbFetch(table,limit=100){
-  // Essayer order par timestamp, fallback sans order si erreur
-  let url=`${SB_URL}/rest/v1/${table}?limit=${limit}`;
-  let r=await fetch(`${SB_URL}/rest/v1/${table}?order=timestamp.desc&limit=${limit}`,
-    {headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
-  if(!r.ok){
-    // Fallback: sans tri (au cas où la colonne timestamp n'existe pas)
-    r=await fetch(url,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
-  }
+  let base=`${SB_URL}/rest/v1/${table}?limit=${limit}`;
+  let r=await fetch(`${base}&order=timestamp.desc`,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
+  if(!r.ok)r=await fetch(base,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
   if(!r.ok)throw new Error(`${table}: ${r.status}`);
   return r.json();
 }
-function fmt(v,d=2){return v==null?'—':Number(v).toFixed(d);}
-function fdate(v){if(!v)return'—';return new Date(v).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function fmt(v,d=2){return v==null||v===''?'—':Number(v).toFixed(d);}
+function signed(v,d=1){if(v==null||v==='')return'—';const n=Number(v);if(isNaN(n))return'—';return (n>=0?'+':'')+n.toFixed(d)+'%';}
+function locale(){return LANG==='en'?'en-GB':'fr-FR';}
+function fdate(v){if(!v)return'—';const x=new Date(v);if(isNaN(x))return'—';return x.toLocaleString(locale(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
 function mn(r){return r.match||r.match_name||(r.home_team?`${r.home_team} vs ${r.away_team}`:(r.home?`${r.home} vs ${r.away}`:'—'));}
 function dt(r){return r.timestamp||r.created_at||null;}
-function edgeOf(r){return r.edge_pct!=null?r.edge_pct:(r.value_edge!=null?r.value_edge:null);}
 function sport(s){const c=s==='tennis'?'bp':'bb';return`<span class="badge ${c}">${s==='tennis'?'🎾':'⚽'} ${s||'foot'}</span>`;}
 function result(r){if(r===true||r==='win'||r==='WIN')return'<span class="badge bg">✓ WIN</span>';if(r===false||r==='loss'||r==='LOSS')return'<span class="badge br">✗ LOSS</span>';return'<span class="badge ba">⏳</span>';}
-function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':t==='B'?'🥉':'👁️';return`<span class="${cls}">${icon}${t}</span>`;}
+function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':t==='B'?'🥉':'👁️';return`<span class="${cls}">${icon} ${t}</span>`;}
+function edgeCell(v){if(v==null||v==='')return'—';const n=Number(v);const cls=n>=0?'pos':'neg';return`<span class="${cls}">${signed(n)}</span>`;}
+
+function stampUpdate(){document.getElementById('upd').textContent=`${t('updated')}: ${new Date().toLocaleTimeString(locale())} · ${t('auto')}`;}
 
 async function loadAll(){
   document.getElementById('err').style.display='none';
@@ -187,12 +324,12 @@ async function loadAll(){
       sbFetch('signals').catch(()=>[]),
       sbFetch('performance_log').catch(()=>[])
     ]);
-    render();
-    document.getElementById('upd').textContent='Mis à jour: '+new Date().toLocaleTimeString('fr-FR')+' · Auto 60s';
+    render();stampUpdate();
   }catch(e){
-    const el=document.getElementById('err');
-    el.style.display='block';el.textContent='⚠ '+e.message;
-  }finally{document.getElementById('loader').style.display='none';}
+    const el=document.getElementById('err');el.style.display='block';el.textContent='⚠ '+e.message;
+  }finally{
+    const l=document.getElementById('loader');l.style.opacity='0';setTimeout(()=>l.style.display='none',300);
+  }
 }
 
 function render(){
@@ -203,128 +340,111 @@ function render(){
   const pnl=settled.reduce((a,b)=>{const w=b.result===true||b.result==='win';return a+(w?Number(b.potential_win||0)-Number(b.stake||0):-Number(b.stake||0));},0);
   const pmSigs=sigs.filter(s=>s.type==='prematch'||s.sport==='prematch');
   const liveSigs=sigs.filter(s=>s.type!=='prematch'&&s.sport!=='prematch');
+  const cur=LANG==='en'?'':'€';const curP=LANG==='en'?'€':'€';
 
-  // STATS GRID
   const stats=[
-    {l:'Signaux Pré-Match',v:pmSigs.length,c:'#f59e0b',s:'aujourd hui'},
-    {l:'Signaux Live',v:liveSigs.length,c:'#06b6d4',s:'détectés'},
-    {l:'Win Rate',v:wr?wr+'%':'—',c:wr>=62?'#10b981':'#f59e0b',s:'cible 62-72%'},
-    {l:'P&L Simulé',v:settled.length?(pnl>=0?'+':'')+pnl.toFixed(0)+'€':'—',c:pnl>=0?'#10b981':'#ef4444',s:'paper trading'},
-    {l:'Paris',v:bets.length,c:'#e2e8f0',s:settled.length+' résolus'},
-    {l:'W / L',v:`${wins.length} / ${losses.length}`,c:'#e2e8f0',s:'wins / losses'},
+    {l:t('st_pm'),v:pmSigs.length,c:'var(--warn)',s:t('sub_today')},
+    {l:t('st_live'),v:liveSigs.length,c:'var(--accent2)',s:t('sub_detected')},
+    {l:t('st_wr'),v:wr?wr+'%':'—',c:wr>=62?'var(--pos)':'var(--warn)',s:t('sub_target')},
+    {l:t('st_pnl'),v:settled.length?(pnl>=0?'+':'')+pnl.toFixed(0)+'€':'—',c:pnl>=0?'var(--pos)':'var(--neg)',s:t('sub_paper')},
+    {l:t('st_bets'),v:bets.length,c:'var(--text)',s:settled.length+' '+t('sub_settled')},
+    {l:t('st_wl'),v:`${wins.length} / ${losses.length}`,c:'var(--text)',s:t('sub_wl')},
   ];
   document.getElementById('stat-grid').innerHTML=stats.map(s=>`
-    <div class="stat-card">
+    <div class="stat-card" style="--bar:${s.c}">
       <div class="stat-label">${s.l}</div>
       <div class="stat-value" style="color:${s.c}">${s.v}</div>
       <div class="stat-sub">${s.s}</div>
     </div>`).join('');
 
-  // PRÉ-MATCH OVERVIEW
   document.getElementById('pm-cnt').textContent=pmSigs.length;
   const pmEl=document.getElementById('pm-overview');
   if(!pmSigs.length){
-    pmEl.innerHTML='<div class="empty"><div style="font-size:32px">🌅</div>Rapport à 6h du matin — Telegram</div>';
+    pmEl.innerHTML=`<div class="empty"><div class="em-ico">🌅</div>${t('empty_pm_short')}</div>`;
   } else {
-    pmEl.innerHTML='<div style="padding:12px">'+pmSigs.slice(0,3).map(s=>`
-      <div class="match-card value-bet" style="margin-bottom:8px">
-        <div class="match-header">
-          <span class="match-name">${mn(s)}</span>
-          ${tier(s.tier)}
-        </div>
+    pmEl.innerHTML='<div style="padding:13px">'+pmSigs.slice(0,3).map(s=>`
+      <div class="match-card value-bet">
+        <div class="match-header"><span class="match-name">${mn(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · ${s.time_cmr||fdate(dt(s))}</div>
         <div class="recommendation">
           <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}</div>
-          <div class="rec-details">Edge: +${fmt(s.value_edge||s.edge_pct,1)}% · Mise: ${fmt(s.stake_pct,1)}% bankroll</div>
+          <div class="rec-details">${t('lbl_edge')}: ${signed(s.value_edge!=null?s.value_edge:s.edge_pct)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}% ${t('lbl_bankroll')}</div>
         </div>
       </div>`).join('')+'</div>';
   }
 
-  // SIGNAUX LIVE OVERVIEW
   document.getElementById('sig-cnt').textContent=liveSigs.length;
   document.getElementById('sig-body').innerHTML=liveSigs.length?liveSigs.slice(0,6).map(s=>`
-    <tr>
-      <td style="color:#e2e8f0;max-width:140px;overflow:hidden;text-overflow:ellipsis">${mn(s)}</td>
+    <tr><td style="color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis">${mn(s)}</td>
       <td>${sport(s.sport)}</td><td>${s.market||s.bet_type||'—'}</td>
-      <td style="color:#06b6d4;font-family:'JetBrains Mono',monospace">${s.odds?fmt(s.odds):'—'}</td>
-      <td>${s.value_edge!=null?`<span style="color:#10b981">+${fmt(s.value_edge,1)}%</span>`:'—'}</td>
-      <td style="color:#475569">${fdate(dt(s))}</td>
-    </tr>`)
-    .join(''):`<tr><td colspan="6"><div class="empty">Aucun signal live</div></td></tr>`;
+      <td class="mono tnum">${s.odds?fmt(s.odds):'—'}</td>
+      <td>${edgeCell(s.value_edge)}</td>
+      <td style="color:var(--text3)">${fdate(dt(s))}</td></tr>`).join('')
+    :`<tr><td colspan="6"><div class="empty">${t('empty_live')}</div></td></tr>`;
 
-  // PRÉ-MATCH FULL TAB
   document.getElementById('pm-full-cnt').textContent=pmSigs.length;
   const pmFull=document.getElementById('pm-full');
   if(!pmSigs.length){
-    pmFull.innerHTML='<div class="empty"><div style="font-size:36px">🌅</div>Le rapport arrive chaque matin à 6h sur Telegram<br><small style="color:#1e3a5f;margin-top:6px">Les analyses apparaîtront ici après réception</small></div>';
+    pmFull.innerHTML=`<div class="empty"><div class="em-ico">🌅</div>${t('empty_pm_full')}<small>${t('empty_pm_sub')}</small></div>`;
   } else {
     pmFull.innerHTML=pmSigs.map(s=>`
-      <div class="match-card ${s.tier?'value-bet':''}" style="margin-bottom:10px">
-        <div class="match-header">
-          <span class="match-name">${mn(s)}</span>
-          ${tier(s.tier)}
-        </div>
-        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(dt(s))} CMR</div>
+      <div class="match-card ${s.tier?'value-bet':''}">
+        <div class="match-header"><span class="match-name">${mn(s)}</span>${tier(s.tier)}</div>
+        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(dt(s))}</div>
         ${s.market?`<div class="recommendation">
           <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}</div>
-          <div class="rec-details">Proba modèle: ${fmt(s.p_model,1)}% · Edge: +${fmt(s.edge_pct||s.value_edge,1)}% · Mise: ${fmt(s.stake_pct,1)}%</div>
+          <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
         </div>`:''}
         <div class="match-stats">
           <div class="stat-pill">P(Over 2.5): <span>${fmt(s.over_25_pct||0,1)}%</span></div>
           <div class="stat-pill">P(BTTS): <span>${fmt(s.btts_pct||0,1)}%</span></div>
-          <div class="stat-pill">λ dom: <span>${fmt(s.lambda_home||0,2)}</span></div>
-          <div class="stat-pill">λ ext: <span>${fmt(s.lambda_away||0,2)}</span></div>
+          <div class="stat-pill">λ ${LANG==='en'?'home':'dom'}: <span>${fmt(s.lambda_home||0,2)}</span></div>
+          <div class="stat-pill">λ ${LANG==='en'?'away':'ext'}: <span>${fmt(s.lambda_away||0,2)}</span></div>
         </div>
       </div>`).join('');
   }
 
-  // SIGNAUX LIVE FULL TAB
   document.getElementById('all-sig-cnt').textContent=liveSigs.length;
   document.getElementById('all-sig-body').innerHTML=liveSigs.length?liveSigs.map(s=>`
-    <tr>
-      <td style="color:#e2e8f0">${mn(s)}</td>
+    <tr><td style="color:var(--text)">${mn(s)}</td>
       <td>${sport(s.sport)}</td><td>${s.market||s.bet_type||'—'}</td>
-      <td style="color:#06b6d4;font-family:'JetBrains Mono',monospace">${s.odds?fmt(s.odds):'—'}</td>
-      <td>${s.value_edge!=null?`<span style="color:#10b981">+${fmt(s.value_edge,1)}%</span>`:'—'}</td>
-      <td>${tier(s.tier)}</td>
-      <td style="color:#475569">${fdate(dt(s))}</td>
-    </tr>`).join(''):`<tr><td colspan="7"><div class="empty">Aucun signal</div></td></tr>`;
+      <td class="mono tnum">${s.odds?fmt(s.odds):'—'}</td>
+      <td>${edgeCell(s.value_edge)}</td><td>${tier(s.tier)}</td>
+      <td style="color:var(--text3)">${fdate(dt(s))}</td></tr>`).join('')
+    :`<tr><td colspan="7"><div class="empty">${t('empty_live')}</div></td></tr>`;
 
-  // PARIS TAB
   document.getElementById('bets-cnt').textContent=bets.length;
   document.getElementById('bets-body').innerHTML=bets.length?bets.map(b=>`
-    <tr>
-      <td style="color:#e2e8f0">${mn(b)}</td>
-      <td style="color:#06b6d4;font-family:'JetBrains Mono',monospace">${b.odds?fmt(b.odds):'—'}</td>
-      <td style="font-family:'JetBrains Mono',monospace">${b.stake?fmt(b.stake,0)+'€':'—'}</td>
-      <td style="color:#10b981;font-family:'JetBrains Mono',monospace">${b.potential_win?fmt(b.potential_win,0)+'€':'—'}</td>
+    <tr><td style="color:var(--text)">${mn(b)}</td>
+      <td class="mono tnum">${b.odds?fmt(b.odds):'—'}</td>
+      <td class="mono">${b.stake?fmt(b.stake,0)+'€':'—'}</td>
+      <td class="mono pos">${b.potential_win?fmt(b.potential_win,0)+'€':'—'}</td>
       <td>${result(b.result)}</td>
-      <td style="color:#475569">${fdate(dt(b))}</td>
-    </tr>`).join(''):`<tr><td colspan="6"><div class="empty">Aucun pari</div></td></tr>`;
+      <td style="color:var(--text3)">${fdate(dt(b))}</td></tr>`).join('')
+    :`<tr><td colspan="6"><div class="empty">${t('empty_bets')}</div></td></tr>`;
 
-  // PERF TAB
   const perfStats=[
-    {l:'Win Rate',v:wr?wr+'%':'—',c:wr>=62?'#10b981':'#f59e0b',s:'objectif ≥62%'},
-    {l:'P&L Total',v:settled.length?(pnl>=0?'+':'')+pnl.toFixed(0)+'€':'—',c:pnl>=0?'#10b981':'#ef4444',s:'paper trading'},
-    {l:'Paris résolus',v:settled.length,c:'#e2e8f0',s:`${wins.length}W / ${losses.length}L`},
+    {l:t('st_wr'),v:wr?wr+'%':'—',c:wr>=62?'var(--pos)':'var(--warn)',s:t('sub_goal')},
+    {l:t('st_pnl_total'),v:settled.length?(pnl>=0?'+':'')+pnl.toFixed(0)+'€':'—',c:pnl>=0?'var(--pos)':'var(--neg)',s:t('sub_paper')},
+    {l:t('st_settled'),v:settled.length,c:'var(--text)',s:`${wins.length}W / ${losses.length}L`},
   ];
   document.getElementById('perf-grid').innerHTML=perfStats.map(s=>`
-    <div class="stat-card"><div class="stat-label">${s.l}</div>
-    <div class="stat-value" style="color:${s.c}">${s.v}</div>
-    <div class="stat-sub">${s.s}</div></div>`).join('');
+    <div class="stat-card" style="--bar:${s.c}"><div class="stat-label">${s.l}</div>
+    <div class="stat-value" style="color:${s.c}">${s.v}</div><div class="stat-sub">${s.s}</div></div>`).join('');
   document.getElementById('perf-log').innerHTML=perf.length?
-    perf.map(r=>`<div style="padding:8px;border-bottom:1px solid var(--border);font-size:11px;color:#94a3b8">${Object.entries(r).map(([k,v])=>`<span style="color:#475569">${k}:</span> ${v}`).join(' · ')}</div>`).join('')
-    :'<div class="empty">Disponible après les premiers résultats</div>';
+    perf.map(r=>`<div class="perf-row">${Object.entries(r).map(([k,v])=>`<b>${k}:</b> ${v}`).join(' · ')}</div>`).join('')
+    :`<div class="empty">${t('empty_perf')}</div>`;
 }
 
 function showTab(id,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');btn.classList.add('active');
 }
 
-setTimeout(()=>{document.getElementById("loader").style.display="none";},8000);
+/* init */
+setTheme(THEME);applyI18n();
+setTimeout(()=>{const l=document.getElementById('loader');l.style.opacity='0';setTimeout(()=>l.style.display='none',300);},8000);
 loadAll();
 setInterval(loadAll,60000);
 </script>
