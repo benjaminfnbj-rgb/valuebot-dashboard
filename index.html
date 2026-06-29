@@ -149,6 +149,16 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 /* MATCH CARDS */
 .match-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;
   padding:15px;margin-bottom:11px;transition:border-color .2s ease;}
+.match-card.risk{border-color:color-mix(in srgb,var(--neg) 55%,transparent);
+  background:color-mix(in srgb,var(--neg) 6%,var(--surface2));}
+.match-card.safest{border-color:color-mix(in srgb,var(--pos) 60%,transparent);
+  background:color-mix(in srgb,var(--pos) 7%,var(--surface2));box-shadow:0 0 0 1px color-mix(in srgb,var(--pos) 25%,transparent);}
+.mbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:7px;
+  font-size:9px;font-weight:800;letter-spacing:0.04em;font-family:'Sora',sans-serif;margin-left:6px;vertical-align:middle;}
+.mbadge.risk{background:color-mix(in srgb,var(--neg) 16%,transparent);color:var(--neg);
+  border:1px solid color-mix(in srgb,var(--neg) 40%,transparent);}
+.mbadge.safe{background:color-mix(in srgb,var(--pos) 16%,transparent);color:var(--pos);
+  border:1px solid color-mix(in srgb,var(--pos) 40%,transparent);}
 .match-card.value-bet{border-color:color-mix(in srgb,var(--pos) 38%,transparent);
   background:color-mix(in srgb,var(--pos) 5%,var(--surface2));}
 .match-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:7px;}
@@ -297,7 +307,7 @@ const I18N={
    updated:"Mis à jour",auto:"Auto 60s",
    empty_pm_short:"Rapport chaque matin à 6h — Telegram",empty_pm_full:"Le rapport arrive chaque matin à 6h sur Telegram",empty_pm_sub:"Les analyses apparaîtront ici après réception",
    empty_live:"Aucun signal live",empty_bets:"Aucun pari",empty_perf:"Disponible après les premiers résultats",
-   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…",ft_product:"ValueBot — Trading sportif algorithmique",ft_disc:"Paris sportifs réservés aux personnes majeures. Comporte un risque de perte. Paper trading."},
+   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…",ft_product:"ValueBot — Trading sportif algorithmique",ft_disc:"Paris sportifs réservés aux personnes majeures. Comporte un risque de perte. Paper trading.",badge_risk:"RISQUE",badge_safe:"PLUS SÛR"},
  en:{tagline:"Pre-Match + Live",nav_overview:"Overview",nav_prematch:"Pre-Match",nav_live:"Live Signals",nav_bets:"Bets",nav_perf:"Performance",
    card_pm_recent:"Latest Pre-Match Signals",card_live:"Live Signals",card_pm_today:"Today's Pre-Match Analysis",card_all_live:"All Live Signals",card_bets:"Bet History",card_perf_log:"Performance Log",
    th_match:"Match",th_sport:"Sport",th_market:"Market",th_odds:"Odds",th_date:"Date",th_tier:"Tier",th_stake:"Stake",th_potwin:"Pot. win",th_result:"Result",
@@ -307,7 +317,7 @@ const I18N={
    updated:"Updated",auto:"Auto 60s",
    empty_pm_short:"Report every morning at 6am — Telegram",empty_pm_full:"The report arrives every morning at 6am on Telegram",empty_pm_sub:"Analyses will appear here once received",
    empty_live:"No live signal",empty_bets:"No bets",empty_perf:"Available after the first results",
-   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…",ft_product:"ValueBot — Algorithmic sports trading",ft_disc:"Sports betting is for adults only and carries a risk of loss. Paper trading."}
+   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…",ft_product:"ValueBot — Algorithmic sports trading",ft_disc:"Sports betting is for adults only and carries a risk of loss. Paper trading.",badge_risk:"RISK",badge_safe:"SAFEST"}
 };
 let LANG=localStorage.getItem('vb_lang')||(navigator.language||'fr').slice(0,2);
 if(LANG!=='en'&&LANG!=='fr')LANG='fr';
@@ -345,6 +355,24 @@ function dt(r){return r.timestamp||r.created_at||null;}
 function sport(s){const c=s==='tennis'?'bp':'bb';return`<span class="badge ${c}">${s==='tennis'?'🎾':'⚽'} ${s||'foot'}</span>`;}
 function result(r){if(r===true||r==='win'||r==='WIN')return'<span class="badge bg">✓ WIN</span>';if(r===false||r==='loss'||r==='LOSS')return'<span class="badge br">✗ LOSS</span>';return'<span class="badge ba">⏳</span>';}
 function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':t==='B'?'🥉':'👁️';return`<span class="${cls}">${icon} ${t}</span>`;}
+function mbadges(s){
+  let b='';
+  if(s.is_safest===true||s.is_safest==='true'||s.is_safest===1) b+=`<span class="mbadge safe">✅ ${t('badge_safe')}</span>`;
+  if(s.risk_zone===true||s.risk_zone==='true'||s.risk_zone===1) b+=`<span class="mbadge risk">⚠️ ${t('badge_risk')}</span>`;
+  return b;
+}
+function cardClass(s){
+  if(s.is_safest===true||s.is_safest==='true'||s.is_safest===1) return 'safest';
+  if(s.risk_zone===true||s.risk_zone==='true'||s.risk_zone===1) return 'risk';
+  return s.tier?'value-bet':'';
+}
+function overPct(s){
+  // P(Over 2.5) = over_25_pct si présent, sinon p_model (marché Over)
+  const v = (s.over_25_pct!=null && s.over_25_pct>0) ? s.over_25_pct
+          : ((s.market||'').toLowerCase().includes('over') ? s.p_model : null);
+  return v!=null ? fmt(v,1)+'%' : '—';
+}
+function lam(v){ return (v!=null && v>0) ? fmt(v,2) : '—'; }
 function edgeCell(v){if(v==null||v==='')return'—';const n=Number(v);const cls=n>=0?'pos':'neg';return`<span class="${cls}">${signed(n)}</span>`;}
 
 function stampUpdate(){document.getElementById('upd').textContent=`${t('updated')}: ${new Date().toLocaleTimeString(locale())} · ${t('auto')}`;}
@@ -396,8 +424,8 @@ function render(){
     pmEl.innerHTML=`<div class="empty"><div class="em-ico">🌅</div>${t('empty_pm_short')}</div>`;
   } else {
     pmEl.innerHTML='<div style="padding:13px">'+pmSigs.slice(0,3).map(s=>`
-      <div class="match-card value-bet">
-        <div class="match-header"><span class="match-name">${mn(s)}</span>${tier(s.tier)}</div>
+      <div class="match-card ${cardClass(s)}">
+        <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · ${s.time_cmr||fdate(dt(s))}</div>
         <div class="recommendation">
           <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}</div>
@@ -421,18 +449,18 @@ function render(){
     pmFull.innerHTML=`<div class="empty"><div class="em-ico">🌅</div>${t('empty_pm_full')}<small>${t('empty_pm_sub')}</small></div>`;
   } else {
     pmFull.innerHTML=pmSigs.map(s=>`
-      <div class="match-card ${s.tier?'value-bet':''}">
-        <div class="match-header"><span class="match-name">${mn(s)}</span>${tier(s.tier)}</div>
+      <div class="match-card ${cardClass(s)}">
+        <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(dt(s))}</div>
         ${s.market?`<div class="recommendation">
           <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}</div>
           <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
         </div>`:''}
         <div class="match-stats">
-          <div class="stat-pill">P(Over 2.5): <span>${fmt(s.over_25_pct||0,1)}%</span></div>
-          <div class="stat-pill">P(BTTS): <span>${fmt(s.btts_pct||0,1)}%</span></div>
-          <div class="stat-pill">λ ${LANG==='en'?'home':'dom'}: <span>${fmt(s.lambda_home||0,2)}</span></div>
-          <div class="stat-pill">λ ${LANG==='en'?'away':'ext'}: <span>${fmt(s.lambda_away||0,2)}</span></div>
+          <div class="stat-pill">P(Over 2.5): <span>${overPct(s)}</span></div>
+          <div class="stat-pill">P(BTTS): <span>${(s.btts_pct!=null&&s.btts_pct>0)?fmt(s.btts_pct,1)+'%':'—'}</span></div>
+          <div class="stat-pill">λ ${LANG==='en'?'home':'dom'}: <span>${lam(s.lambda_home)}</span></div>
+          <div class="stat-pill">λ ${LANG==='en'?'away':'ext'}: <span>${lam(s.lambda_away)}</span></div>
         </div>
       </div>`).join('');
   }
