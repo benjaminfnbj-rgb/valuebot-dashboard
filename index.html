@@ -428,7 +428,7 @@ function render(){
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · ${s.time_cmr||fdate(dt(s))}</div>
         <div class="recommendation">
-          <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}</div>
+          <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker!='?'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_edge')}: ${signed(s.value_edge!=null?s.value_edge:s.edge_pct)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}% ${t('lbl_bankroll')}</div>
         </div>
       </div>`).join('')+'</div>';
@@ -453,7 +453,7 @@ function render(){
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(dt(s))}</div>
         ${s.market?`<div class="recommendation">
-          <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}</div>
+          <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker!='?'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
         </div>`:''}
         <div class="match-stats">
