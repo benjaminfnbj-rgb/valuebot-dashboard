@@ -46,28 +46,44 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
              radial-gradient(ellipse 55% 38% at 88% 102%,var(--glow2) 0%,transparent 60%);}
 
 /* HEADER */
-.header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--bg) 82%,transparent);
+.header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--bg) 88%,transparent);
   backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--border);padding:0 14px;min-height:60px;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:env(safe-area-inset-top);}
-.logo{display:flex;align-items:center;gap:11px;min-width:0;}
-.logo-icon{width:36px;height:36px;border-radius:10px;background:var(--grad);
-  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+  border-bottom:1px solid var(--border);padding:8px 12px;min-height:58px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-top:calc(8px + env(safe-area-inset-top));}
+.logo{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;overflow:hidden;}
+.logo-icon{width:34px;height:34px;border-radius:10px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
   box-shadow:0 4px 14px -4px var(--accent);}
-.logo-text{font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:var(--text);letter-spacing:-0.02em;line-height:1;}
-.logo-sub{font-size:9px;color:var(--accent2);letter-spacing:0.16em;text-transform:uppercase;font-weight:600;margin-top:3px;}
-.h-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.icon-btn{width:34px;height:34px;border-radius:9px;background:var(--surface);border:1px solid var(--border2);
-  color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;
-  transition:all .2s ease;font-family:inherit;}
+.logo-txt-wrap{min-width:0;overflow:hidden;}
+.logo-text{font-family:'Sora',sans-serif;font-weight:800;font-size:15px;color:var(--text);
+  letter-spacing:-0.02em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.logo-sub{font-size:8.5px;color:var(--accent2);letter-spacing:0.14em;text-transform:uppercase;
+  font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.h-actions{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.icon-btn{width:32px;height:32px;border-radius:9px;background:var(--surface);border:1px solid var(--border2);
+  color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;
+  transition:all .2s ease;font-family:inherit;flex-shrink:0;padding:0;}
 .icon-btn:hover{color:var(--text);border-color:var(--accent);}
 .icon-btn:active{transform:scale(0.92);}
-.lang-btn{width:auto;padding:0 10px;font-size:12px;font-weight:700;font-family:'Sora',sans-serif;letter-spacing:0.04em;}
-.live-pill{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--pos) 14%,transparent);
-  border:1px solid color-mix(in srgb,var(--pos) 28%,transparent);border-radius:20px;padding:5px 11px;
-  font-size:11px;color:var(--pos);font-weight:600;letter-spacing:0.04em;}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--pos);animation:pulse 2s infinite;box-shadow:0 0 8px var(--pos);}
+.lang-btn{width:auto;min-width:32px;padding:0 8px;font-size:11.5px;font-weight:700;
+  font-family:'Sora',sans-serif;letter-spacing:0.04em;}
+.live-pill{display:flex;align-items:center;gap:5px;background:color-mix(in srgb,var(--pos) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--pos) 28%,transparent);border-radius:20px;padding:5px 10px;
+  font-size:10.5px;color:var(--pos);font-weight:700;letter-spacing:0.04em;flex-shrink:0;height:32px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--pos);animation:pulse 2s infinite;
+  box-shadow:0 0 8px var(--pos);flex-shrink:0;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+/* Petits écrans : on dégraisse pour ne jamais chevaucher le logo */
+@media(max-width:430px){
+  .logo-sub{display:none;}
+  .live-pill .live-txt{display:none;}
+  .live-pill{padding:0;width:32px;height:32px;justify-content:center;border-radius:9px;}
+}
+@media(max-width:340px){
+  .h-actions{gap:4px;}
+  .icon-btn,.lang-btn,.live-pill{width:30px;height:30px;}
+}
 
 /* NAV */
 .nav{display:flex;gap:4px;padding:11px 14px;border-bottom:1px solid var(--border);
@@ -167,6 +183,16 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 .err-box{display:none;background:color-mix(in srgb,var(--neg) 9%,transparent);
   border:1px solid color-mix(in srgb,var(--neg) 24%,transparent);border-radius:10px;
   padding:11px 14px;margin-bottom:13px;font-size:11.5px;color:var(--neg);}
+.app-footer{margin:26px auto 8px;max-width:980px;padding:16px 14px 6px;
+  border-top:1px solid var(--border);text-align:center;}
+.app-footer .ft-brand{font-family:'Sora',sans-serif;font-weight:700;font-size:11.5px;
+  color:var(--text2);letter-spacing:0.02em;display:flex;align-items:center;justify-content:center;gap:7px;}
+.app-footer .ft-logo{width:16px;height:16px;border-radius:5px;background:var(--grad);
+  display:inline-flex;align-items:center;justify-content:center;font-size:9px;}
+.app-footer a{color:var(--accent);text-decoration:none;font-weight:600;}
+.app-footer .ft-meta{font-size:9.5px;color:var(--text3);margin-top:5px;line-height:1.5;}
+.app-footer .ft-disc{font-size:8.5px;color:var(--text3);margin-top:7px;opacity:0.8;max-width:520px;
+  margin-left:auto;margin-right:auto;}
 @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
 </style>
 </head>
@@ -179,7 +205,7 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 <div class="header">
   <div class="logo">
     <div class="logo-icon">⚡</div>
-    <div>
+    <div class="logo-txt-wrap">
       <div class="logo-text">ValueBot</div>
       <div class="logo-sub" data-i18n="tagline">Pré-Match + Live</div>
     </div>
@@ -187,7 +213,7 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
   <div class="h-actions">
     <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Thème" aria-label="Thème">🌙</button>
     <button class="icon-btn lang-btn" id="lang-btn" onclick="toggleLang()" title="Langue" aria-label="Langue">FR</button>
-    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <div class="live-pill"><div class="live-dot"></div><span class="live-txt">LIVE</span></div>
     <button class="icon-btn" onclick="loadAll()" title="Refresh" aria-label="Refresh">↻</button>
   </div>
 </div>
@@ -247,6 +273,13 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
       <div id="perf-log" style="padding:6px 4px;"></div>
     </div>
   </div>
+
+  <footer class="app-footer">
+    <div class="ft-brand"><span class="ft-logo">⚡</span> Cameroun Connect Service</div>
+    <div class="ft-meta"><span data-i18n="ft_product">ValueBot — Trading sportif algorithmique</span> ·
+      <a href="mailto:contact@camconnectservice.com">contact@camconnectservice.com</a></div>
+    <div class="ft-disc" data-i18n="ft_disc">Paris sportifs réservés aux personnes majeures. Comporte un risque de perte. Paper trading.</div>
+  </footer>
 </div>
 
 <script>
@@ -264,7 +297,7 @@ const I18N={
    updated:"Mis à jour",auto:"Auto 60s",
    empty_pm_short:"Rapport chaque matin à 6h — Telegram",empty_pm_full:"Le rapport arrive chaque matin à 6h sur Telegram",empty_pm_sub:"Les analyses apparaîtront ici après réception",
    empty_live:"Aucun signal live",empty_bets:"Aucun pari",empty_perf:"Disponible après les premiers résultats",
-   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…"},
+   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…",ft_product:"ValueBot — Trading sportif algorithmique",ft_disc:"Paris sportifs réservés aux personnes majeures. Comporte un risque de perte. Paper trading."},
  en:{tagline:"Pre-Match + Live",nav_overview:"Overview",nav_prematch:"Pre-Match",nav_live:"Live Signals",nav_bets:"Bets",nav_perf:"Performance",
    card_pm_recent:"Latest Pre-Match Signals",card_live:"Live Signals",card_pm_today:"Today's Pre-Match Analysis",card_all_live:"All Live Signals",card_bets:"Bet History",card_perf_log:"Performance Log",
    th_match:"Match",th_sport:"Sport",th_market:"Market",th_odds:"Odds",th_date:"Date",th_tier:"Tier",th_stake:"Stake",th_potwin:"Pot. win",th_result:"Result",
@@ -274,7 +307,7 @@ const I18N={
    updated:"Updated",auto:"Auto 60s",
    empty_pm_short:"Report every morning at 6am — Telegram",empty_pm_full:"The report arrives every morning at 6am on Telegram",empty_pm_sub:"Analyses will appear here once received",
    empty_live:"No live signal",empty_bets:"No bets",empty_perf:"Available after the first results",
-   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…"}
+   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…",ft_product:"ValueBot — Algorithmic sports trading",ft_disc:"Sports betting is for adults only and carries a risk of loss. Paper trading."}
 };
 let LANG=localStorage.getItem('vb_lang')||(navigator.language||'fr').slice(0,2);
 if(LANG!=='en'&&LANG!=='fr')LANG='fr';
