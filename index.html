@@ -193,6 +193,16 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 .err-box{display:none;background:color-mix(in srgb,var(--neg) 9%,transparent);
   border:1px solid color-mix(in srgb,var(--neg) 24%,transparent);border-radius:10px;
   padding:11px 14px;margin-bottom:13px;font-size:11.5px;color:var(--neg);}
+.api-status{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;margin:0 0 16px;display:flex;flex-direction:column;gap:8px;}
+.api-status-title{font-size:10.5px;font-weight:700;color:var(--text2);letter-spacing:0.06em;
+  text-transform:uppercase;font-family:'Sora',sans-serif;}
+.api-status-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;}
+.api-src-name{color:var(--text2);font-weight:600;}
+.api-chip{padding:2px 8px;border-radius:6px;font-size:9.5px;font-weight:700;font-family:'Sora',sans-serif;}
+.api-chip.ok{background:color-mix(in srgb,var(--pos) 15%,transparent);color:var(--pos);}
+.api-chip.warn{background:color-mix(in srgb,#f59e0b 15%,transparent);color:#d97706;}
+.api-chip.off{background:color-mix(in srgb,var(--neg) 12%,transparent);color:var(--neg);}
 .app-footer{margin:26px auto 8px;max-width:980px;padding:16px 14px 6px;
   border-top:1px solid var(--border);text-align:center;}
 .app-footer .ft-brand{font-family:'Sora',sans-serif;font-weight:700;font-size:11.5px;
