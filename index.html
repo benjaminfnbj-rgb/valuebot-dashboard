@@ -251,7 +251,22 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
   <div class="err-box" id="err"></div>
 
   <div class="tab active" id="tab-overview">
-    <div class="stat-grid" id="stat-grid"></div>
+    <div class="api-status" id="api-status-panel" style="display:none">
+  <div class="api-status-title">📡 Sources de données</div>
+  <div class="api-status-row">
+    <span class="api-src-name">API-Football (100/j, reset quotidien)</span>
+    <span class="api-chip ok" id="src-apif">✓ Principal</span>
+  </div>
+  <div class="api-status-row">
+    <span class="api-src-name">The Odds API (quota mensuel)</span>
+    <span class="api-chip warn" id="src-odds">Secours</span>
+  </div>
+  <div class="api-status-row">
+    <span class="api-src-name">Supabase DB</span>
+    <span class="api-chip" id="src-sb">—</span>
+  </div>
+</div>
+<div class="stat-grid" id="stat-grid"></div>
     <div class="card">
       <div class="card-head"><span class="card-title">🌅 <span data-i18n="card_pm_recent">Derniers Signaux Pré-Match</span></span><span class="card-count" id="pm-cnt">0</span></div>
       <div id="pm-overview"></div>
@@ -395,6 +410,15 @@ async function loadAll(){
       sbFetch('signals').catch(()=>[]),
       sbFetch('performance_log').catch(()=>[])
     ]);
+    // ─── Panneau statut sources ───
+    const _asp=document.getElementById('api-status-panel');
+    if(_asp){
+      _asp.style.display='flex';
+      const _tot=pmSigs.length+liveSigs.length;
+      const _sbc=document.getElementById('src-sb');
+      if(_sbc){_sbc.textContent=_tot>0?'✓ '+_tot+' signaux':'↻ Connecté (vide)';
+        _sbc.className='api-chip '+(_tot>0?'ok':'warn');}
+    }
     render();stampUpdate();
   }catch(e){
     const el=document.getElementById('err');el.style.display='block';el.textContent='⚠ '+e.message;
@@ -438,7 +462,7 @@ function render(){
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · ${s.time_cmr||fdate(dt(s))}</div>
         <div class="recommendation">
-          <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
+          <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_edge')}: ${signed(s.value_edge!=null?s.value_edge:s.edge_pct)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}% ${t('lbl_bankroll')}</div>
         </div>
       </div>`).join('')+'</div>';
@@ -463,7 +487,7 @@ function render(){
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(dt(s))}</div>
         ${s.market?`<div class="recommendation">
-          <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
+          <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
         </div>`:''}
         <div class="match-stats">
