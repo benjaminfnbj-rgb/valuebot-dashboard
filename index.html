@@ -409,17 +409,7 @@ async function loadAll(){
       sbFetch('bets_history').catch(()=>[]),
       sbFetch('signals').catch(()=>[]),
       sbFetch('performance_log').catch(()=>[])
-    ]);
-    // ─── Panneau statut sources ───
-    const _asp=document.getElementById('api-status-panel');
-    if(_asp){
-      _asp.style.display='flex';
-      const _tot=pmSigs.length+liveSigs.length;
-      const _sbc=document.getElementById('src-sb');
-      if(_sbc){_sbc.textContent=_tot>0?'✓ '+_tot+' signaux':'↻ Connecté (vide)';
-        _sbc.className='api-chip '+(_tot>0?'ok':'warn');}
-    }
-    render();stampUpdate();
+    ]);    render();stampUpdate();
   }catch(e){
     const el=document.getElementById('err');el.style.display='block';el.textContent='⚠ '+e.message;
   }finally{
@@ -435,6 +425,20 @@ function render(){
   const pnl=settled.reduce((a,b)=>{const w=b.result===true||b.result==='win';return a+(w?Number(b.potential_win||0)-Number(b.stake||0):-Number(b.stake||0));},0);
   const pmSigs=sigs.filter(s=>s.type==='prematch'||s.sport==='prematch');
   const liveSigs=sigs.filter(s=>s.type!=='prematch'&&s.sport!=='prematch');
+
+    // ─── Panneau statut sources (ici pmSigs et liveSigs sont définis) ───
+    try {
+      const _asp=document.getElementById('api-status-panel');
+      if(_asp){
+        _asp.style.display='flex';
+        const _tot=(pmSigs||[]).length+(liveSigs||[]).length;
+        const _sbc=document.getElementById('src-sb');
+        if(_sbc){
+          _sbc.textContent=_tot>0?'✓ '+_tot+' signaux':'↻ Connecté (vide)';
+          _sbc.className='api-chip '+(_tot>0?'ok':'warn');
+        }
+      }
+    } catch(e){}
   const cur=LANG==='en'?'':'€';const curP=LANG==='en'?'€':'€';
 
   const stats=[
