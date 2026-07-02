@@ -203,6 +203,11 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 .api-chip.ok{background:color-mix(in srgb,var(--pos) 15%,transparent);color:var(--pos);}
 .api-chip.warn{background:color-mix(in srgb,#f59e0b 15%,transparent);color:#d97706;}
 .api-chip.off{background:color-mix(in srgb,var(--neg) 12%,transparent);color:var(--neg);}
+
+.result-win{color:#10b981;font-weight:800;font-family:'Sora',sans-serif;}
+.result-loss{color:#ef4444;font-weight:800;font-family:'Sora',sans-serif;}
+.result-pending{color:#f59e0b;font-weight:700;font-family:'Sora',sans-serif;}
+.result-void{color:var(--text3);font-weight:600;}
 .app-footer{margin:26px auto 8px;max-width:980px;padding:16px 14px 6px;
   border-top:1px solid var(--border);text-align:center;}
 .app-footer .ft-brand{font-family:'Sora',sans-serif;font-weight:700;font-size:11.5px;
@@ -378,7 +383,19 @@ function fdate(v){if(!v)return'—';const x=new Date(v);if(isNaN(x))return'—';
 function mn(r){return r.match||r.match_name||(r.home_team?`${r.home_team} vs ${r.away_team}`:(r.home?`${r.home} vs ${r.away}`:'—'));}
 function dt(r){return r.timestamp||r.created_at||null;}
 function sport(s){const c=s==='tennis'?'bp':'bb';return`<span class="badge ${c}">${s==='tennis'?'🎾':'⚽'} ${s||'foot'}</span>`;}
-function result(r){if(r===true||r==='win'||r==='WIN')return'<span class="badge bg">✓ WIN</span>';if(r===false||r==='loss'||r==='LOSS')return'<span class="badge br">✗ LOSS</span>';return'<span class="badge ba">⏳</span>';}
+function result(r,pnl){
+  if(r==='WIN'||r==='win'||r===true){
+    const p=pnl!=null&&pnl!=0?` +${(+pnl).toFixed(2)}€`:'';
+    return `<span class="result-win">✅ GAGNÉ${p}</span>`;
+  }
+  if(r==='LOSS'||r==='loss'||r===false){
+    const p=pnl!=null&&pnl!=0?` ${(+pnl).toFixed(2)}€`:'';
+    return `<span class="result-loss">❌ PERDU${p}</span>`;
+  }
+  if(r==='PENDING'||r==null) return '<span class="result-pending">⏳ EN COURS</span>';
+  if(r==='VOID') return '<span class="result-void">— ANNULÉ</span>';
+  return `<span class="result-void">${r}</span>`;
+}
 function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':t==='B'?'🥉':'👁️';return`<span class="${cls}">${icon} ${t}</span>`;}
 function mbadges(s){
   let b='';
@@ -518,7 +535,7 @@ function render(){
       <td class="mono tnum">${b.odds?fmt(b.odds):'—'}</td>
       <td class="mono">${b.stake?fmt(b.stake,0)+'€':'—'}</td>
       <td class="mono pos">${b.potential_win?fmt(b.potential_win,0)+'€':'—'}</td>
-      <td>${result(b.result)}</td>
+      <td>${result(b.result,b.pnl)}</td>
       <td style="color:var(--text3)">${fdate(dt(b))}</td></tr>`).join('')
     :`<tr><td colspan="6"><div class="empty">${t('empty_bets')}</div></td></tr>`;
 
