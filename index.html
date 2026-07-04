@@ -208,6 +208,15 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 .result-loss{color:#ef4444;font-weight:800;font-family:'Sora',sans-serif;}
 .result-pending{color:#f59e0b;font-weight:700;font-family:'Sora',sans-serif;}
 .result-void{color:var(--text3);font-weight:600;}
+
+.surface-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:6px;
+  font-size:9px;font-weight:800;letter-spacing:0.04em;font-family:'Sora',sans-serif;margin-left:5px;}
+.surface-clay{background:#c8622220;color:#c86222;}
+.surface-grass{background:#22a86320;color:#22a863;}
+.surface-hard{background:#2263a820;color:#2263a8;}
+.tennis-detail{font-size:10px;color:var(--text2);margin-top:4px;padding:4px 8px;
+  background:var(--surface2);border-radius:7px;display:flex;gap:10px;flex-wrap:wrap;}
+.tennis-detail span{white-space:nowrap;}
 .app-footer{margin:26px auto 8px;max-width:980px;padding:16px 14px 6px;
   border-top:1px solid var(--border);text-align:center;}
 .app-footer .ft-brand{font-family:'Sora',sans-serif;font-weight:700;font-size:11.5px;
@@ -417,6 +426,13 @@ function result(r,pnl){
   return `<span class="result-void">${r}</span>`;
 }
 function tier(t){if(!t)return'';const cls=t==='S'?'tier-s':t==='A'?'tier-a':'tier-b';const icon=t==='S'?'🥇':t==='A'?'🥈':t==='B'?'🥉':'👁️';return`<span class="${cls}">${icon} ${t}</span>`;}
+function surfaceBadge(surf){
+  if(!surf) return '';
+  const s=surf.toLowerCase();
+  const cls=s.includes('clay')?'surface-clay':s.includes('grass')?'surface-grass':'surface-hard';
+  const icon=s.includes('clay')?'🟤':s.includes('grass')?'🟢':'🔵';
+  return `<span class="surface-badge ${cls}">${icon} ${surf.charAt(0).toUpperCase()+surf.slice(1)}</span>`;
+}
 function mbadges(s){
   let b='';
   if(s.is_safest===true||s.is_safest==='true'||s.is_safest===1) b+=`<span class="mbadge safe">✅ ${t('badge_safe')}</span>`;
@@ -532,10 +548,19 @@ function render(){
           <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
         </div>`:''}
         <div class="match-stats">
-          <div class="stat-pill">P(Over 2.5): <span>${overPct(s)}</span></div>
-          <div class="stat-pill">P(BTTS): <span>${(s.btts_pct!=null&&s.btts_pct>0)?fmt(s.btts_pct,1)+'%':'—'}</span></div>
-          <div class="stat-pill">λ ${LANG==='en'?'home':'dom'}: <span>${lam(s.lambda_home)}</span></div>
-          <div class="stat-pill">λ ${LANG==='en'?'away':'ext'}: <span>${lam(s.lambda_away)}</span></div>
+          ${s.sport==='tennis_prematch'
+            ? `<div class="tennis-detail">
+                 ${surfaceBadge(s.surface)}
+                 ${s.best_of?`<span>BO${s.best_of}</span>`:''}
+                 ${s.ranking_p1?`<span>R${s.ranking_p1} vs R${s.ranking_p2}</span>`:''}
+                 ${s.exp_games?`<span>~${s.exp_games} jeux attendus</span>`:''}
+               </div>`
+            : `<div class="match-stats">
+                 <div class="stat-pill">P(Over 2.5): <span>${overPct(s)}</span></div>
+                 <div class="stat-pill">P(BTTS): <span>${(s.btts_pct!=null&&s.btts_pct>0)?fmt(s.btts_pct,1)+'%':'—'}</span></div>
+                 <div class="stat-pill">λ ${LANG==='en'?'home':'dom'}: <span>${lam(s.lambda_home)}</span></div>
+                 <div class="stat-pill">λ ${LANG==='en'?'away':'ext'}: <span>${lam(s.lambda_away)}</span></div>
+               </div>`}
         </div>
       </div>`).join('');
   }
