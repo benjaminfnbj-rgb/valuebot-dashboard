@@ -380,9 +380,14 @@ function fmt(v,d=2){return v==null||v===''?'—':Number(v).toFixed(d);}
 function signed(v,d=1){if(v==null||v==='')return'—';const n=Number(v);if(isNaN(n))return'—';return (n>=0?'+':'')+n.toFixed(d)+'%';}
 function locale(){return LANG==='en'?'en-GB':'fr-FR';}
 function fdate(v){
-  if(!v)return'—';
-  // Si c'est déjà une chaîne formatée (ex: "Ven 03/07/2026 à 04h00"), l'afficher telle quelle
-  if(typeof v==='string'&&v.match(/^[A-Za-z]{3}\s/)) return v;
+  if(!v||v==='null'||v==='undefined')return'—';
+  // Déjà formaté avec jour de la semaine (ex: "Ven 03/07/2026 à 04h00")
+  if(typeof v==='string'&&/^[A-Za-zéèê]{3}\s/.test(v))return v;
+  // Format court "02/07 06:16" → on l'affiche tel quel
+  if(typeof v==='string'&&/^\d{2}\/\d{2}\s\d{2}:\d{2}/.test(v))return v;
+  // Format court "02/07 à 06h16"
+  if(typeof v==='string'&&/^\d{2}\/\d{2}\s(à\s)?\d{2}h/.test(v))return v;
+  // ISO date → formatter avec jour
   const x=new Date(v);
   if(isNaN(x.getTime()))return v||'—';
   const jours=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
@@ -394,8 +399,9 @@ function fdate(v){
   const mn2=String(x.getMinutes()).padStart(2,'0');
   return `${j} ${dd}/${mm}/${yyyy} à ${hh}h${mn2}`;
 }
+
 function mn(r){return r.match||r.match_name||(r.home_team?`${r.home_team} vs ${r.away_team}`:(r.home?`${r.home} vs ${r.away}`:'—'));}
-function dt(r){return r.commence_time||r.match_date||r.timestamp||r.created_at||null;}
+function dt(r){return r.time_cmr||r.commence_time||r.match_date||r.timestamp||r.created_at||null;}
 function sport(s){const c=s==='tennis'?'bp':'bb';return`<span class="badge ${c}">${s==='tennis'?'🎾':'⚽'} ${s||'foot'}</span>`;}
 function result(r,pnl){
   if(r==='WIN'||r==='win'||r===true){
@@ -495,7 +501,7 @@ function render(){
     pmEl.innerHTML='<div style="padding:13px">'+pmSigs.slice(0,3).map(s=>`
       <div class="match-card ${cardClass(s)}">
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
-        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(s.commence_time)||fdate(dt(s))}</div>
+        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${fdate(dt(s))}</div>
         <div class="recommendation">
           <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_edge')}: ${signed(s.value_edge!=null?s.value_edge:s.edge_pct)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}% ${t('lbl_bankroll')}</div>
@@ -520,7 +526,7 @@ function render(){
     pmFull.innerHTML=pmSigs.map(s=>`
       <div class="match-card ${cardClass(s)}">
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
-        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${s.time_cmr||fdate(s.commence_time)||fdate(dt(s))}</div>
+        <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${fdate(dt(s))}</div>
         ${s.market?`<div class="recommendation">
           <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
