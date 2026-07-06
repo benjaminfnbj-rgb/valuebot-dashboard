@@ -217,6 +217,18 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
 .tennis-detail{font-size:10px;color:var(--text2);margin-top:4px;padding:4px 8px;
   background:var(--surface2);border-radius:7px;display:flex;gap:10px;flex-wrap:wrap;}
 .tennis-detail span{white-space:nowrap;}
+
+.day-group{margin-bottom:20px;}
+.day-header{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0 6px;border-bottom:2px solid var(--accent);margin-bottom:10px;}
+.day-label{font-family:'Sora',sans-serif;font-weight:800;font-size:12.5px;color:var(--accent);}
+.day-count{font-size:10px;color:var(--text2);font-weight:600;}
+.perf-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 10px;}
+.perf-stat{background:var(--surface2);border-radius:10px;padding:10px 12px;
+  display:flex;flex-direction:column;gap:3px;}
+.perf-label{font-size:9.5px;color:var(--text2);text-transform:uppercase;
+  letter-spacing:0.05em;font-weight:700;font-family:'Sora',sans-serif;}
+.perf-val{font-size:20px;font-weight:800;font-family:'Sora',sans-serif;color:var(--text);}
 .app-footer{margin:26px auto 8px;max-width:980px;padding:16px 14px 6px;
   border-top:1px solid var(--border);text-align:center;}
 .app-footer .ft-brand{font-family:'Sora',sans-serif;font-weight:700;font-size:11.5px;
@@ -462,7 +474,40 @@ async function loadAll(){
       sbFetch('bets_history').catch(()=>[]),
       sbFetch('signals').catch(()=>[]),
       sbFetch('performance_log').catch(()=>[])
-    ]);    render();stampUpdate();
+    ]);
+    // Journal Performance calculé depuis bets_history
+    try{
+      const _rb=bets.filter(b=>b.result==='WIN'||b.result==='LOSS'||b.result==='win'||b.result==='loss');
+      const _wb=_rb.filter(b=>b.result==='WIN'||b.result==='win');
+      const _lb=_rb.filter(b=>b.result==='LOSS'||b.result==='loss');
+      const _pnl=_rb.reduce((a,b)=>a+Number(b.pnl||0),0);
+      const _hr=_rb.length?(_wb.length/_rb.length*100).toFixed(1):null;
+      const _st=Math.max(1,_rb.reduce((a,b)=>a+Number(b.stake||b.stake_eur||10),0));
+      const _roi=_rb.length?(_pnl/_st*100).toFixed(1):null;
+      const _ao=_rb.length?(_rb.reduce((a,b)=>a+Number(b.odds||2),0)/_rb.length).toFixed(2):null;
+      const _pj=document.getElementById('perf-log');
+      if(_pj){
+        if(!_rb.length){
+          _pj.innerHTML='<div class="empty" style="padding:24px 0">📊 Disponible après les premiers résultats résolus</div>';
+        }else{
+          const _hrc=_hr>=62?'var(--pos)':'#f59e0b';
+          const _pc=_pnl>=0?'var(--pos)':'var(--neg)';
+          const _rc=_roi>=0?'var(--pos)':'var(--neg)';
+          _pj.innerHTML='<div class="perf-summary">'
+            +'<div class="perf-stat"><span class="perf-label">Paris résolus</span><span class="perf-val">'+_rb.length+'</span></div>'
+            +'<div class="perf-stat"><span class="perf-label">Taux réussite</span><span class="perf-val" style="color:'+_hrc+'">'+(_hr||'—')+'%</span></div>'
+            +'<div class="perf-stat"><span class="perf-label">P&L total</span><span class="perf-val" style="color:'+_pc+'">'+(_pnl>=0?'+':'')+_pnl.toFixed(2)+'€</span></div>'
+            +'<div class="perf-stat"><span class="perf-label">ROI</span><span class="perf-val" style="color:'+_rc+'">'+(_roi>=0?'+':'')+(_roi||'—')+'%</span></div>'
+            +'<div class="perf-stat"><span class="perf-label">Cote moy.</span><span class="perf-val">'+(_ao||'—')+'</span></div>'
+            +'<div class="perf-stat"><span class="perf-label">W / L</span><span class="perf-val">'+_wb.length+'<span style="color:var(--pos)">W</span> / '+_lb.length+'<span style="color:var(--neg)">L</span></span></div>'
+            +'</div>'
+            +'<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px 0">'
+            +(_hr>=62?'✅ Objectif ≥62% atteint !':'⚠️ Objectif ≥62% pas encore atteint')
+            +' · Paper trading uniquement</div>';
+        }
+      }
+    }catch(e){}
+    render();stampUpdate();
   }catch(e){
     const el=document.getElementById('err');el.style.display='block';el.textContent='⚠ '+e.message;
   }finally{
@@ -471,13 +516,13 @@ async function loadAll(){
 }
 
 function render(){
-  const settled=bets.filter(b=>b.result!=null);
-  const wins=settled.filter(b=>b.result===true||b.result==='win');
-  const losses=settled.filter(b=>b.result===false||b.result==='loss');
+  const settled=bets.filter(b=>b.result!=null&&b.result!=='PENDING'&&b.result!=='');
+  const wins=settled.filter(b=>b.result===true||b.result==='win'||b.result==='WIN');
+  const losses=settled.filter(b=>b.result===false||b.result==='loss'||b.result==='LOSS');
   const wr=settled.length?(wins.length/settled.length*100).toFixed(1):null;
-  const pnl=settled.reduce((a,b)=>{const w=b.result===true||b.result==='win';return a+(w?Number(b.potential_win||0)-Number(b.stake||0):-Number(b.stake||0));},0);
-  const pmSigs=sigs.filter(s=>s.type==='prematch'||s.sport==='prematch');
-  const liveSigs=sigs.filter(s=>s.type!=='prematch'&&s.sport!=='prematch');
+  const pnl=settled.reduce((a,b)=>{const w=b.result===true||b.result==='win'||b.result==='WIN';return a+(w?Number(b.potential_win||0)-Number(b.stake||0):-Number(b.stake||0));},0);
+  const pmSigs=sigs.filter(s=>s.type==='prematch'||s.sport==='prematch'||s.sport==='tennis_prematch'||s.sport==='tennis');
+  const liveSigs=sigs.filter(s=>s.type==='live'||s.sport==='live');
 
     // ─── Panneau statut sources (ici pmSigs et liveSigs sont définis) ───
     try {
@@ -519,7 +564,7 @@ function render(){
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${fdate(dt(s))}</div>
         <div class="recommendation">
-          <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
+          <div class="rec-market">💡 ${s.market||s.bet_type||'—'} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?`· <span style="${s.bookmaker&&s.bookmaker.toLowerCase&&s.bookmaker.toLowerCase().includes('1xbet')?'color:#e8a000;font-weight:800':'color:var(--accent2)'}">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_edge')}: ${signed(s.value_edge!=null?s.value_edge:s.edge_pct)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}% ${t('lbl_bankroll')}</div>
         </div>
       </div>`).join('')+'</div>';
@@ -539,12 +584,43 @@ function render(){
   if(!pmSigs.length){
     pmFull.innerHTML=`<div class="empty"><div class="em-ico">🌅</div>${t('empty_pm_full')}<small>${t('empty_pm_sub')}</small></div>`;
   } else {
-    pmFull.innerHTML=pmSigs.map(s=>`
+    // Tri par date + groupement
+    const _sd=pmSigs.slice().sort((a,b)=>new Date(a.commence_time||a.timestamp||0)-new Date(b.commence_time||b.timestamp||0));
+    const _gr=new Map();
+    _sd.forEach(sg=>{
+      let dk='À venir';
+      try{
+        const _r=sg.commence_time||sg.timestamp||'';
+        const _d=_r?new Date(_r):null;
+        if(_d&&!isNaN(_d)){
+          const _j=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][_d.getDay()];
+          const _n=new Date(),_t=new Date(_n);_t.setDate(_t.getDate()+1);
+          const _s=String(_d.getDate()).padStart(2,'0')+'/'+String(_d.getMonth()+1).padStart(2,'0');
+          if(_d.toDateString()===_n.toDateString())dk='Aujourd\'hui — '+_j+' '+_s;
+          else if(_d.toDateString()===_t.toDateString())dk='Demain — '+_j+' '+_s;
+          else dk=_j+' '+_s+'/'+_d.getFullYear();
+        }else if(sg.time_cmr&&sg.time_cmr.length>3)dk=sg.time_cmr.split(' à ')[0];
+      }catch(e){}
+      if(!_gr.has(dk))_gr.set(dk,[]);_gr.get(dk).push(sg);
+    });
+    let _ghtml='';
+    for(const [_day,_dsigs] of _gr){
+      const _vb=_dsigs.filter(sg2=>(sg2.edge_pct||sg2.value_edge||0)>0).length;
+      _ghtml+='<div class="day-group">'
+        +'<div class="day-header">'
+        +'<span class="day-label">📅 '+_day+'</span>'
+        +'<span class="day-count">'+_dsigs.length+' analyse'+(_dsigs.length>1?'s':'')
+        +' · <b>'+_vb+' value bet'+(_vb>1?'s':'')+'</b></span>'
+        +'</div>';
+      // Réutiliser le renderer existant sur ce sous-groupe
+      const _pmSigsBackup=pmSigs.splice(0);
+      pmSigs.length=0;_dsigs.forEach(x=>pmSigs.push(x));
+      _ghtml+=_ghtml+=pmSigs.map(s=>`
       <div class="match-card ${cardClass(s)}">
         <div class="match-header"><span class="match-name">${mn(s)}${mbadges(s)}</span>${tier(s.tier)}</div>
         <div class="match-league">🏆 ${s.league||'—'} · 🕐 ${fdate(dt(s))}</div>
         ${s.market?`<div class="recommendation">
-          <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?` · <span style="color:var(--accent2)">${s.bookmaker}</span>`:''}</div>
+          <div class="rec-market">💡 ${s.market} @ ${fmt(s.odds)}${s.bookmaker&&s.bookmaker&&s.bookmaker!='?'&&s.bookmaker!='—'&&s.bookmaker!='undefined'?`· <span style="${s.bookmaker&&s.bookmaker.toLowerCase&&s.bookmaker.toLowerCase().includes('1xbet')?'color:#e8a000;font-weight:800':'color:var(--accent2)'}">${s.bookmaker}</span>`:''}</div>
           <div class="rec-details">${t('lbl_model')}: ${fmt(s.p_model,1)}% · ${t('lbl_edge')}: ${signed(s.edge_pct!=null?s.edge_pct:s.value_edge)} · ${t('lbl_stake')}: ${fmt(s.stake_pct,1)}%</div>
         </div>`:''}
         <div class="match-stats">
@@ -563,6 +639,10 @@ function render(){
                </div>`}
         </div>
       </div>`).join('');
+      pmSigs.length=0;_pmSigsBackup.forEach(x=>pmSigs.push(x));
+      _ghtml+='</div>';
+    }
+    pmFull.innerHTML=_ghtml;;
   }
 
   document.getElementById('all-sig-cnt').textContent=liveSigs.length;
