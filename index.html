@@ -391,11 +391,20 @@ function toggleTheme(){setTheme(THEME==='dark'?'light':'dark');}
 /* ---------- data ---------- */
 let bets=[],sigs=[],perf=[];
 async function sbFetch(table,limit=100){
-  let base=`${SB_URL}/rest/v1/${table}?limit=${limit}`;
-  let r=await fetch(`${base}&order=timestamp.desc`,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
-  if(!r.ok)r=await fetch(base,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
-  if(!r.ok)throw new Error(`${table}: ${r.status}`);
-  return r.json();
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    let base=`${SB_URL}/rest/v1/${table}?limit=${limit}`;
+    let r=await fetch(`${base}&order=timestamp.desc`,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`},signal:ctrl.signal});
+    if(!r.ok)r=await fetch(base,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`},signal:ctrl.signal});
+    if(!r.ok)throw new Error(`${table}: ${r.status}`);
+    return await r.json();
+  }catch(e){
+    if(e.name==='AbortError')throw new Error(`${table}: timeout (8s)`);
+    throw e;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 function fmt(v,d=2){return v==null||v===''?'—':Number(v).toFixed(d);}
 function signed(v,d=1){if(v==null||v==='')return'—';const n=Number(v);if(isNaN(n))return'—';return (n>=0?'+':'')+n.toFixed(d)+'%';}
