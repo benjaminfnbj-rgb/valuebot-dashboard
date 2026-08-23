@@ -159,6 +159,11 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
   border:1px solid color-mix(in srgb,var(--neg) 40%,transparent);}
 .mbadge.safe{background:color-mix(in srgb,var(--pos) 16%,transparent);color:var(--pos);
   border:1px solid color-mix(in srgb,var(--pos) 40%,transparent);}
+.mbadge.pick{background:linear-gradient(90deg,#e8a000,#ffcf4d);color:#1a1400;
+  border:1px solid #e8a000;box-shadow:0 0 10px color-mix(in srgb,#e8a000 45%,transparent);}
+.match-card.pickofday{border-color:#e8a000;
+  background:color-mix(in srgb,#e8a000 9%,var(--surface2));
+  box-shadow:0 0 0 1px #e8a000, 0 6px 22px color-mix(in srgb,#e8a000 22%,transparent);}
 .match-card.value-bet{border-color:color-mix(in srgb,var(--pos) 38%,transparent);
   background:color-mix(in srgb,var(--pos) 5%,var(--surface2));}
 .match-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:7px;}
@@ -358,7 +363,7 @@ const I18N={
    updated:"Mis à jour",auto:"Auto 60s",
    empty_pm_short:"Rapport chaque matin à 6h — Telegram",empty_pm_full:"Le rapport arrive chaque matin à 6h sur Telegram",empty_pm_sub:"Les analyses apparaîtront ici après réception",
    empty_live:"Aucun signal live",empty_bets:"Aucun pari",empty_perf:"Disponible après les premiers résultats",
-   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…",ft_product:"ValueBot — Trading sportif algorithmique",ft_disc:"Paris sportifs réservés aux personnes majeures. Comporte un risque de perte. Paper trading.",badge_risk:"RISQUE",badge_safe:"PLUS SÛR"},
+   lbl_edge:"Edge",lbl_stake:"Mise",lbl_model:"Proba modèle",lbl_bankroll:"bankroll",connecting:"CONNEXION…",ft_product:"ValueBot — Trading sportif algorithmique",ft_disc:"Paris sportifs réservés aux personnes majeures. Comporte un risque de perte. Paper trading.",badge_risk:"RISQUE",badge_safe:"PLUS SÛR",badge_pick:"PICK DU JOUR"},
  en:{tagline:"Pre-Match + Live",nav_overview:"Overview",nav_prematch:"Pre-Match",nav_live:"Live Signals",nav_bets:"Bets",nav_perf:"Performance",
    card_pm_recent:"Latest Pre-Match Signals",card_live:"Live Signals",card_pm_today:"Today's Pre-Match Analysis",card_all_live:"All Live Signals",card_bets:"Bet History",card_perf_log:"Performance Log",
    th_match:"Match",th_sport:"Sport",th_market:"Market",th_odds:"Odds",th_date:"Date",th_tier:"Tier",th_stake:"Stake",th_potwin:"Pot. win",th_result:"Result",
@@ -368,7 +373,7 @@ const I18N={
    updated:"Updated",auto:"Auto 60s",
    empty_pm_short:"Report every morning at 6am — Telegram",empty_pm_full:"The report arrives every morning at 6am on Telegram",empty_pm_sub:"Analyses will appear here once received",
    empty_live:"No live signal",empty_bets:"No bets",empty_perf:"Available after the first results",
-   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…",ft_product:"ValueBot — Algorithmic sports trading",ft_disc:"Sports betting is for adults only and carries a risk of loss. Paper trading.",badge_risk:"RISK",badge_safe:"SAFEST"}
+   lbl_edge:"Edge",lbl_stake:"Stake",lbl_model:"Model prob",lbl_bankroll:"bankroll",connecting:"CONNECTING…",ft_product:"ValueBot — Algorithmic sports trading",ft_disc:"Sports betting is for adults only and carries a risk of loss. Paper trading.",badge_risk:"RISK",badge_safe:"SAFEST",badge_pick:"PICK OF THE DAY"}
 };
 let LANG=localStorage.getItem('vb_lang')||(navigator.language||'fr').slice(0,2);
 if(LANG!=='en'&&LANG!=='fr')LANG='fr';
@@ -454,13 +459,16 @@ function surfaceBadge(surf){
   const icon=s.includes('clay')?'🟤':s.includes('grass')?'🟢':'🔵';
   return `<span class="surface-badge ${cls}">${icon} ${surf.charAt(0).toUpperCase()+surf.slice(1)}</span>`;
 }
+function isPick(s){return s.signal==='PICK_DU_JOUR'||s.is_pick_of_day===true||s.is_pick_of_day==='true'||s.is_pick_of_day===1;}
 function mbadges(s){
   let b='';
+  if(isPick(s)) b+=`<span class="mbadge pick">🔒 ${t('badge_pick')}</span>`;
   if(s.is_safest===true||s.is_safest==='true'||s.is_safest===1) b+=`<span class="mbadge safe">✅ ${t('badge_safe')}</span>`;
   if(s.risk_zone===true||s.risk_zone==='true'||s.risk_zone===1) b+=`<span class="mbadge risk">⚠️ ${t('badge_risk')}</span>`;
   return b;
 }
 function cardClass(s){
+  if(isPick(s)) return 'pickofday';
   if(s.is_safest===true||s.is_safest==='true'||s.is_safest===1) return 'safest';
   if(s.risk_zone===true||s.risk_zone==='true'||s.risk_zone===1) return 'risk';
   return s.tier?'value-bet':'';
@@ -614,6 +622,7 @@ function render(){
     });
     let _ghtml='';
     for(const [_day,_dsigs] of _gr){
+      _dsigs.sort((a,b)=>(isPick(b)?1:0)-(isPick(a)?1:0));
       const _vb=_dsigs.filter(sg2=>(sg2.edge_pct||sg2.value_edge||0)>0).length;
       _ghtml+='<div class="day-group">'
         +'<div class="day-header">'
