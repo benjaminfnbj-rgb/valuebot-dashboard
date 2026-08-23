@@ -161,6 +161,8 @@ tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
   border:1px solid color-mix(in srgb,var(--pos) 40%,transparent);}
 .mbadge.pick{background:linear-gradient(90deg,#e8a000,#ffcf4d);color:#1a1400;
   border:1px solid #e8a000;box-shadow:0 0 10px color-mix(in srgb,#e8a000 45%,transparent);}
+.mbadge.best{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);}
 .match-card.pickofday{border-color:#e8a000;
   background:color-mix(in srgb,#e8a000 9%,var(--surface2));
   box-shadow:0 0 0 1px #e8a000, 0 6px 22px color-mix(in srgb,#e8a000 22%,transparent);}
@@ -460,9 +462,29 @@ function surfaceBadge(surf){
   return `<span class="surface-badge ${cls}">${icon} ${surf.charAt(0).toUpperCase()+surf.slice(1)}</span>`;
 }
 function isPick(s){return s.signal==='PICK_DU_JOUR'||s.is_pick_of_day===true||s.is_pick_of_day==='true'||s.is_pick_of_day===1;}
+// Catégorie de marché (pour "meilleur pari par catégorie")
+function marketCat(s){
+  const m=(s.market||'').toLowerCase();
+  if(m.includes('mi-temps')||m.includes('mt')){return m.includes('0.5')?'Mi-temps 0.5':'Mi-temps 1.5';}
+  if(m.includes('over 1.5')||m.includes('under 1.5'))return 'O/U 1.5';
+  if(m.includes('over 2.5')||m.includes('under 2.5'))return 'O/U 2.5';
+  if(m.includes('over 3.5')||m.includes('under 3.5'))return 'O/U 3.5';
+  if(m.includes('btts'))return 'BTTS';
+  if(m.startsWith('1x')||m.startsWith('x2')||m.startsWith('12')||m.includes('ou nul')||m.includes('ou ext'))return 'Double Chance';
+  if(m.startsWith('1 ')||m.startsWith('x ')||m.startsWith('2 ')||m.includes('domicile')||m.includes('extérieur')||m.includes('nul'))return '1X2';
+  return null;
+}
+// Marque le meilleur value bet (plus gros edge) de chaque catégorie sur un ensemble
+function tagBestPerCategory(sigs){
+  const best={};
+  sigs.forEach(s=>{const c=marketCat(s);if(!c)return;const e=Number(s.edge_pct||s.value_edge||0);
+    if(e<=0)return;if(!best[c]||e>best[c]._e){best[c]={s,_e:e};}});
+  Object.values(best).forEach(b=>{b.s._bestCat=marketCat(b.s);});
+}
 function mbadges(s){
   let b='';
   if(isPick(s)) b+=`<span class="mbadge pick">🔒 ${t('badge_pick')}</span>`;
+  if(s._bestCat) b+=`<span class="mbadge best">⭐ ${s._bestCat}</span>`;
   if(s.is_safest===true||s.is_safest==='true'||s.is_safest===1) b+=`<span class="mbadge safe">✅ ${t('badge_safe')}</span>`;
   if(s.risk_zone===true||s.risk_zone==='true'||s.risk_zone===1) b+=`<span class="mbadge risk">⚠️ ${t('badge_risk')}</span>`;
   return b;
@@ -539,6 +561,7 @@ function render(){
   const wr=settled.length?(wins.length/settled.length*100).toFixed(1):null;
   const pnl=settled.reduce((a,b)=>{const w=b.result===true||b.result==='win'||b.result==='WIN';return a+(w?Number(b.potential_win||0)-Number(b.stake||0):-Number(b.stake||0));},0);
   const pmSigs=sigs.filter(s=>s.type==='prematch'||s.sport==='prematch'||s.sport==='tennis_prematch'||s.sport==='tennis');
+  tagBestPerCategory(pmSigs);
   const liveSigs=sigs.filter(s=>s.type==='live'||s.sport==='live');
 
     // ─── Panneau statut sources (ici pmSigs et liveSigs sont définis) ───
